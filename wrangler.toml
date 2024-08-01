@@ -3,6 +3,9 @@ compatibility_date = "2024-08-01"
 
 # [vars]
 # MY_VAR = "my-variable"
+[vars]
+AWS_ACCESS_KEY_ID = "Placeholder"
+AWS_SECRET_ACCESS_KEY = "Placeholder"
 
 # [[kv_namespaces]]
 # binding = "MY_KV_NAMESPACE"

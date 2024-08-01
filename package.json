@@ -5,12 +5,12 @@
     "deploy": "wrangler deploy --minify src/index.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.621.0",
     "@types/multer": "^1.4.11",
     "hono": "^4.5.3",
     "multer": "^1.4.5-lts.1"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20240529.0",
-    "wrangler": "^3.57.2"
+    "@cloudflare/workers-types": "^4.20240529.0"
   }
 }
