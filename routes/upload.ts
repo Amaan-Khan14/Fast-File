@@ -1,10 +1,7 @@
 import { Hono } from "hono";
 import { S3Client, ListBucketsCommand, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
-import {
-    getSignedUrl,
-    S3RequestPresigner,
-} from "@aws-sdk/s3-request-presigner";
-
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { v4 as uuid } from "uuid";
 type CustomContext = {
     s3: S3Client;
 };
@@ -29,25 +26,6 @@ uploadRoute.use(async (c, next) => {
     await next();
 });
 
-
-uploadRoute.get('/test-env', (c) => {
-    return c.json({
-        AWS_ACCESS_KEY_ID: c.env.AWS_ACCESS_KEY_ID ? 'Set' : 'Not set',
-        AWS_SECRET_ACCESS_KEY: c.env.AWS_SECRET_ACCESS_KEY ? 'Set' : 'Not set'
-    });
-});
-
-uploadRoute.get('/test-s3', async (c) => {
-    const S3 = c.get('s3');
-    try {
-        const data = await S3.send(new ListBucketsCommand({}));
-        return c.json({ success: true, buckets: data.Buckets });
-    } catch (error) {
-        return c.json({ success: false, error: error });
-    }
-});
-
-
 uploadRoute.post('/upload', async (c) => {
     const S3 = c.get('s3')
 
@@ -59,35 +37,52 @@ uploadRoute.post('/upload', async (c) => {
         return c.json({ success: false, error: 'No valid file found' }, 400)
     }
 
+    const uniqueFileId = `${uuid()}-${file.name}`
     const arrayBuffer = await file.arrayBuffer()
     const params = {
         Bucket: 'fastfile1',
-        Key: file.name,
+        Key: uniqueFileId,
         Body: new Uint8Array(arrayBuffer),
-        ContentType: file.type 
+        ContentType: file.type,
     }
 
     try {
         const command = new PutObjectCommand(params)
         const data = await S3.send(command)
 
-        // console.log('Successfully uploaded file:', data)
 
         const urlCommand = new GetObjectCommand({
             Bucket: 'fastfile1',
-            Key: file.name
+            Key: uniqueFileId
         })
 
-        const url = await getSignedUrl(S3, urlCommand, { expiresIn: 3600 });
+        const url = await getSignedUrl(S3, urlCommand, { expiresIn: 24 * 3600 });
 
-        // console.log("Presigned URL with client" , url);
-
-
-        // return c.json({ success: true, data: data, url: url });
+        return c.json({ success: true, data: data, url: url });
         return c.json({ success: true, url: url });
 
     } catch (error) {
         console.error('Error uploading file:', error)
         return c.json({ success: false, error: String(error) });
+    }
+})
+
+
+uploadRoute.get('/download/:fileId', async (c) => {
+    const S3 = c.get('s3')
+
+    const fileId = c.req.param("fileId")
+
+    const urlCommand = new GetObjectCommand({
+        Bucket: 'fastfile1',
+        Key: fileId
+    })
+    try {
+        const url = await getSignedUrl(S3, urlCommand, { expiresIn: 3600 });
+        return c.json({ success: true, url: url });
+    } catch (error) {
+        console.error('Error downloading file:', error)
+        return c.json({ success: false, error: String(error) });
+
     }
 })
