@@ -5,17 +5,20 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
-  id   Int    @id @default(autoincrement())
-  file File[]
+  id       Int    @id @default(autoincrement())
+  username String @unique
+  password String
+  file     File[]
 }
 
 model File {
   id          String   @id @default(uuid())
   fileName    String
-  s3Key       String
+  s3Key       String  @unique
   contentType String
   size        Int
   uploadedAt  DateTime @default(now())

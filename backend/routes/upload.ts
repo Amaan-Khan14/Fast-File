@@ -2,16 +2,18 @@ import { Hono } from "hono";
 import { S3Client, ListBucketsCommand, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { v4 as uuid } from "uuid";
+
 type CustomContext = {
     s3: S3Client;
 };
-
-export const uploadRoute = new Hono<{ Bindings: Env, Variables: CustomContext }>();
 
 interface Env {
     AWS_ACCESS_KEY_ID: string;
     AWS_SECRET_ACCESS_KEY: string;
 }
+
+export const uploadRoute = new Hono<{ Bindings: Env, Variables: CustomContext }>();
+
 
 uploadRoute.use(async (c, next) => {
     const S3 = new S3Client({
@@ -53,7 +55,8 @@ uploadRoute.post('/upload', async (c) => {
 
         const urlCommand = new GetObjectCommand({
             Bucket: 'fastfile1',
-            Key: uniqueFileId
+            Key: uniqueFileId,
+            ResponseContentDisposition: `attachment; filename="${file.name}"`
         })
 
         const url = await getSignedUrl(S3, urlCommand, { expiresIn: 24 * 3600 });
@@ -67,7 +70,6 @@ uploadRoute.post('/upload', async (c) => {
     }
 })
 
-
 uploadRoute.get('/download/:fileId', async (c) => {
     const S3 = c.get('s3')
 
@@ -75,7 +77,8 @@ uploadRoute.get('/download/:fileId', async (c) => {
 
     const urlCommand = new GetObjectCommand({
         Bucket: 'fastfile1',
-        Key: fileId
+        Key: fileId,
+        ResponseContentDisposition: `attachment;filename="${fileId.split("-")[5]}"`
     })
     try {
         const url = await getSignedUrl(S3, urlCommand, { expiresIn: 3600 });
