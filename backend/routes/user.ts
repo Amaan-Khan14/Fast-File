@@ -7,6 +7,4 @@ const prisma = new PrismaClient()
 
 userRoute.post('/reg', async (c) => {
     const body = c.req.json()
-    
-
 })
