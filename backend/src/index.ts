@@ -3,6 +3,7 @@ import { logger } from 'hono/logger'
 import { uploadRoute } from '../routes/upload'
 import { userRouter } from '../routes/user'
 import { userUploadRouter } from '../routes/userUpload'
+import { cors } from 'hono/cors'
 
 const app = new Hono<{
     Bindings: {
@@ -11,6 +12,11 @@ const app = new Hono<{
         JWT_SECRET: string;
     }
 }>()
+
+app.use(cors({
+    credentials: true,
+    origin: 'http://localhost:5173'
+}))
 
 app.use(logger())
 
