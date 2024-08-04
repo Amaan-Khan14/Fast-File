@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { S3Client, ListBucketsCommand, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { v4 as uuid } from "uuid";
+import JSZip from "jszip";
 
 type CustomContext = {
     s3: S3Client;
@@ -31,23 +32,50 @@ uploadRoute.use(async (c, next) => {
 uploadRoute.post('/upload', async (c) => {
     const S3 = c.get('s3')
 
-    const body = await c.req.parseBody()
-    const file = body['file'] as File
-    console.log(body['file'])
+    const formData = await c.req.formData()
+    const files = await formData.getAll('file') as File[]
 
-    if (!file || !(file instanceof File)) {
-        return c.json({ success: false, error: 'No valid file found' }, 400)
+    console.log('Files received:', files.map(f => f.name))
+
+    if (!files || files.length === 0) {
+        return c.json({ success: false, error: 'No valid files found' }, 400)
     }
 
-    const uniqueFileId = `${uuid()}-${file.name}`
-    const arrayBuffer = await file.arrayBuffer()
-    const params = {
-        Bucket: 'fastfile1',
-        Key: uniqueFileId,
-        Body: new Uint8Array(arrayBuffer),
-        ContentType: file.type,
-    }
+    const uniqueFileId = uuid();
+    let params, fileName, contentType, fileSize
 
+    if (files.length > 1) {
+        fileName = `${uniqueFileId}.zip`
+        const zip = new JSZip()
+        for (const file of files) {
+            const arrayBuffer = await file.arrayBuffer()
+            zip.file(file.name, arrayBuffer)
+
+        }
+        const zipContent = await zip.generateAsync({ type: 'uint8array' })
+
+        fileSize = zipContent.byteLength
+        contentType = 'application/zip'
+
+        params = {
+            Bucket: 'fastfile1',
+            Key: fileName,
+            Body: zipContent,
+            ContentType: contentType,
+        }
+    } else {
+        const file = files[0]
+        const arrayBuffer = await file.arrayBuffer()
+        fileName = `${uniqueFileId}-${file.name}`
+        contentType = file.type
+        fileSize = arrayBuffer.byteLength
+        params = {
+            Bucket: 'fastfile1',
+            Key: fileName,
+            Body: new Uint8Array(arrayBuffer),
+            ContentType: contentType,
+        }
+    }
     try {
         const command = new PutObjectCommand(params)
         const data = await S3.send(command)
@@ -55,13 +83,12 @@ uploadRoute.post('/upload', async (c) => {
 
         const urlCommand = new GetObjectCommand({
             Bucket: 'fastfile1',
-            Key: uniqueFileId,
-            ResponseContentDisposition: `attachment; filename="${file.name}"`
+            Key: fileName,
+            ResponseContentDisposition: `attachment; filename="${fileName}"`
         })
 
         const url = await getSignedUrl(S3, urlCommand, { expiresIn: 24 * 3600 });
 
-        return c.json({ success: true, data: data, url: url });
         return c.json({ success: true, url: url });
 
     } catch (error) {

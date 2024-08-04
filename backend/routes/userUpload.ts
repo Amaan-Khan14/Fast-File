@@ -8,6 +8,8 @@ import { v4 as uuid } from "uuid";
 import { getCookie } from "hono/cookie";
 import { verify } from "hono/jwt";
 import { JWTPayload } from "hono/utils/jwt/types";
+import JSZip from "jszip";
+
 
 type CustomContext = {
     s3: S3Client;
@@ -48,82 +50,105 @@ userUploadRouter.use(async (c, next) => {
 
         await next();
 
-        return c.json({ message: 'Authenticated', payload })
     } catch (error) {
         return c.json({ message: 'Invalid Token' }, 401)
     }
 })
-
 userUploadRouter.post('/upload', async (c) => {
     const prisma = new PrismaClient({
         datasourceUrl: c.env.DATABASE_URL,
-    }).$extends(withAccelerate());
+    }).$extends(withAccelerate())
 
     const S3 = c.get('s3')
     const payload = c.get('payload')
     const userId = await payload.id as number
 
-    const body = await c.req.parseBody()
-    const file = body['file'] as File
-    console.log(body['file'])
+    const formData = await c.req.formData()
+    const files = formData.getAll('file') as File[]
 
-    if (!file || !(file instanceof File)) {
-        return c.json({ success: false, error: 'No valid file found' }, 400)
+    console.log('Files received:', files.map(f => f.name))
+
+    if (!files || files.length === 0) {
+        return c.json({ success: false, error: 'No valid files found' }, 400)
     }
 
-    const uniqueFileId = `${uuid()}-${file.name}`
-    const arrayBuffer = await file.arrayBuffer()
-    const params = {
-        Bucket: 'fastfileforusers',
-        Key: uniqueFileId,
-        Body: new Uint8Array(arrayBuffer),
-        ContentType: file.type,
+    const uniqueFileId = uuid()
+    let params, fileName, contentType, fileSize
+
+    if (files.length > 1) {
+        fileName = `${uniqueFileId}.zip`
+        const zip = new JSZip()
+        for (const file of files) {
+            const arrayBuffer = await file.arrayBuffer()
+            zip.file(file.name, arrayBuffer)
+
+        }
+        const zipContent = await zip.generateAsync({ type: 'uint8array' })
+
+        fileSize = zipContent.byteLength
+        contentType = 'application/zip'
+
+        params = {
+            Bucket: 'fastfileforusers',
+            Key: fileName,
+            Body: zipContent,
+            ContentType: contentType,
+        }
+    } else {
+        const file = files[0]
+        const arrayBuffer = await file.arrayBuffer()
+        fileName = `${uniqueFileId}-${file.name}`
+        contentType = file.type
+        fileSize = arrayBuffer.byteLength
+        params = {
+            Bucket: 'fastfileforusers',
+            Key: fileName,
+            Body: new Uint8Array(arrayBuffer),
+            ContentType: contentType,
+        }
     }
 
     try {
         const command = new PutObjectCommand(params)
         const data = await S3.send(command)
 
-        if (data) {
-            const uploadedFile = await prisma.file.create({
-                data: {
-                    fileName: file.name,
-                    s3Key: uniqueFileId,
-                    contentType: file.type,
-                    size: file.size,
-                    userId: userId
-                }
-            })
-
-            const getObjectParams = {
-                Bucket: 'fastfileforusers',
-                Key: uniqueFileId,
-                ResponseContentDisposition: `attachment; filename="${file.name}"`, /*ResponseContentDisposition parameter when creating the GetObjectCommand. 
-                This tells the browser to treat the file as an attachment and download it instead of displaying it in the browser*/
-            };
-
-            const command = new GetObjectCommand(getObjectParams);
-            const url = await getSignedUrl(S3, command)
-            return c.json({
-                success: true,
-                file: {
-                    fileName: file.name,
-                    contentType: file.type,
-                    size: file.size,
-                    url: url
-                }
-            });
-        } else {
-            return c.json({ success: false, error: "Error Uploading File" });
+        if (!data) {
+            throw new Error("Error Uploading File to S3")
         }
 
+        const uploadedFile = await prisma.file.create({
+            data: {
+                fileName: fileName,
+                s3Key: fileName,
+                contentType: contentType,
+                size: fileSize,
+                userId: userId
+            }
+        })
+
+        const getObjectParams = {
+            Bucket: 'fastfileforusers',
+            Key: fileName,
+            ResponseContentDisposition: `attachment; filename="${fileName}"`,
+        }
+
+        const objectCommand = new GetObjectCommand(getObjectParams)
+        const url = await getSignedUrl(S3, objectCommand)
+
+        return c.json({
+            success: true,
+            file: {
+                fileName: fileName,
+                contentType: contentType,
+                size: fileSize,
+                url: url,
+            }
+        })
     } catch (error) {
         console.error('Error uploading file:', error)
-        return c.json({ success: false, error: String(error) });
+        return c.json({ success: false, error: String(error) })
     }
-
 })
-
 userUploadRouter.get('/download/:fileId', async (c) => {
     const S3 = c.get('s3')
 
