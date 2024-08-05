@@ -10,7 +10,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@radix
 
 export default function Home() {
     const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-    const [uploadProgress, setUploadProgress] = useState<string>('');
+    const [, setUploadProgress] = useState<string>('');
 
     const navigate = useNavigate();
 
@@ -20,25 +20,15 @@ export default function Home() {
         }
     };
 
-
-    const generateIV = () => {
-        const iv = new Uint8Array(16);
-        crypto.getRandomValues(iv);
-        return Array.from(iv, (byte) => byte.toString(16).padStart(2, '0')).join('');
-    };
-
     const uploadFiles = async () => {
         const formData = new FormData();
         selectedFiles.forEach((file) => {
             formData.append('file', file);
         });
 
-        const iv = generateIV();
-        formData.append('iv', iv);
-
         try {
             setUploadProgress('Uploading...');
-            const response = await axios.post('http://localhost:33569/upload', formData, {
+            const response = await axios.post('http://localhost:44179/upload', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 },
@@ -96,19 +86,19 @@ export default function Home() {
                         <Card className="bg-inherit border-0 ml-10 w-full flex items-center flex-col">
                             <h2 className="text-4xl font-bold bg-gradient-to-r from-teal-100 to-teal-400 bg-clip-text text-transparent my-5">Seamless, secure file sharing with peace of mind and privacy.
                             </h2>
-                            <p className="text-gray-300 text-xl tracking-normal">
-                                With FastFile, you can securely share files with <span className='font-bold text-teal-400 tracking-wider'>
+                            <p className="text-gray-300 text-xl tracking-normal font-">
+                                FastFile leverages advanced <span className='font-bold text-teal-400 tracking-wider'>
                                     <TooltipProvider>
                                         <Tooltip>
-                                            <TooltipTrigger>end-to-end encryption</TooltipTrigger>
+                                            <TooltipTrigger>server-side encryption</TooltipTrigger>
                                             <TooltipContent>
                                                 <Card className='bg-[#187367] border-0 p-2 text-white text-base w-72 tracking-normal'>
-                                                    End-to-end encryption safeguards your files, ensuring they remain secure from prying eyes. Only those with the correct "secret key" can unlock the files. When you generate a link, the key is embedded, allowing you to effortlessly share with the right people while keeping your data private.
+                                                    Server-side encryption rigorously protects your files, with encryption keys securely managed and access tightly controlled. Generated links include a time-bound token, allowing secure sharing while preserving stringent privacy measures.
                                                 </Card>
                                             </TooltipContent>
                                         </Tooltip>
                                     </TooltipProvider>
-                                </span>. Links expire automatically, keeping your files private and ensuring they don't stay online indefinitely.
+                                </span> to rigorously protect your files during storage. Expiring access links further ensure that your data remains private and impermanent, adhering to strict security protocols.
                             </p>
                         </Card>
                     </Card>
