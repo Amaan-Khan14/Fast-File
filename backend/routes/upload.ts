@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { S3Client, ListBucketsCommand, PutObjectCommand, GetObjectCommand, HeadObjectCommand, MetadataDirective } from "@aws-sdk/client-s3";
+import { S3Client, ListBucketsCommand, PutObjectCommand, GetObjectCommand, HeadObjectCommand, ServerSideEncryption } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { v4 as uuid } from "uuid";
 import JSZip from "jszip";
@@ -34,14 +34,11 @@ uploadRoute.post('/upload', async (c) => {
 
     const formData = await c.req.formData()
     const files = await formData.getAll('file') as File[]
-    const iv = await formData.get('iv') as string
     console.log('Files received:', files.map(f => f.name))
 
     if (!files || files.length === 0) {
         return c.json({ success: false, error: 'No valid files found' }, 400)
     }
-
-    if (!iv) return c.json({ success: false, error: 'No IV found' }, 400)
 
     const uniqueFileId = uuid();
     let params, fileName, contentType, fileSize
@@ -64,9 +61,7 @@ uploadRoute.post('/upload', async (c) => {
             Key: fileName,
             Body: zipContent,
             ContentType: contentType,
-            Metadata: {
-                'x-amz-meta-iv': iv
-            }
+            ServerSideEncryption: ServerSideEncryption.AES256,
         }
     } else {
         const file = files[0]
@@ -79,9 +74,7 @@ uploadRoute.post('/upload', async (c) => {
             Key: fileName,
             Body: new Uint8Array(arrayBuffer),
             ContentType: contentType,
-            Metadata: {
-                'x-amz-meta-iv': iv
-            }
+            ServerSideEncryption: ServerSideEncryption.AES256,
         }
     }
     try {
@@ -114,18 +107,21 @@ uploadRoute.get('/download/:fileId', async (c) => {
         Key: fileId
     })
     try {
-
-        const headresult = await S3.send(headCommand)
-        const iv = headresult.Metadata?.['x-amz-meta-iv']
-        if (!iv) return c.json({ success: false, error: 'No IV found' }, 400)
+        const headCommand = new HeadObjectCommand({
+            Bucket: 'fastfile1',
+            Key: fileId
+        });
+        const headResult = await S3.send(headCommand);
 
         const urlCommand = new GetObjectCommand({
             Bucket: 'fastfile1',
             Key: fileId,
-            ResponseContentDisposition: `attachment;filename="${fileId.split("-")[5]}"`
-        })
+            ResponseContentDisposition: `attachment; filename="${fileId.split("-")[1]}"`,
+            ResponseContentType: headResult.ContentType,
+        });
+
         const url = await getSignedUrl(S3, urlCommand, { expiresIn: 24 * 3600 });
-        return c.json({ success: true, url: url, iv: iv });
+        return c.json({ success: true, url: url });
     } catch (error) {
         console.error('Error downloading file:', error)
         return c.json({ success: false, error: String(error) });
