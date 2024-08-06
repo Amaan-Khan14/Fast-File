@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import QRCode from "react-qr-code";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 interface FileInfo {
     url: string;
@@ -18,7 +18,7 @@ export default function DownloadPage() {
     const [, setLoading] = useState<boolean>();
     const [error, setError] = useState<string | null>(null);
     const [showQRCode, setShowQRCode] = useState(false);
-
+    const navigate = useNavigate()
     const toggleQRCode = () => {
         setShowQRCode(!showQRCode);
     };
@@ -42,6 +42,20 @@ export default function DownloadPage() {
         fetchFileInfo();
     }, [fileId]);
 
+    const deleteFile = async () => {
+        try {
+            const response = await axios.delete(`http://localhost:8787/${fileId}`);
+            if (response.data.success) {
+                console.log('File deleted successfully');
+                navigate('/');
+            } else {
+                setError(response.data.error || "Failed to delete file");
+            }
+        } catch (error) {
+            setError('An error occurred while deleting the file');
+        }
+    };
+
     const handleDownload = () => {
         if (fileInfo) {
             window.location.href = fileInfo.url;
@@ -54,7 +68,7 @@ export default function DownloadPage() {
 
     if (error) {
         return <div className="text-white">{error}</div>;
-    } 
+    }
     return (
         <div className='bg-gradient-to-b from-[#090a15] via-[#0b1d23] to-[#090a15] min-h-screen'>
             <AppBar />
@@ -115,10 +129,13 @@ export default function DownloadPage() {
                             </div>
                         </div>
                     </CardContent>
-                    <CardFooter className="flex justify-center items-center">
+                    <CardFooter className="flex justify-end items-center">
                         <p className="text-gray-400 text-sm">
                             Expires in 24 hours
                         </p>
+                        <Button onClick={deleteFile} className="bg-[#04c8bb] text-sm px-1 h-6 text-white font-semibold hover:bg-[#92efe6] ml-4">
+                            Delete file
+                        </Button>
                     </CardFooter>
                 </Card>
             </div>
