@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { S3Client, ListBucketsCommand, PutObjectCommand, GetObjectCommand, HeadObjectCommand, ServerSideEncryption } from "@aws-sdk/client-s3";
+import { S3Client, ListBucketsCommand, PutObjectCommand, GetObjectCommand, HeadObjectCommand, ServerSideEncryption, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { v4 as uuid } from "uuid";
 import JSZip from "jszip";
@@ -128,6 +128,25 @@ uploadRoute.get('/download/:fileId', async (c) => {
         return c.json({ success: true, size, url });
     } catch (error) {
         console.error('Error downloading file:', error)
+        return c.json({ success: false, error: String(error) });
+    }
+})
+
+uploadRoute.delete('/:fileId', async (c) => {
+    const S3 = c.get('s3')
+
+    const fileId = c.req.param("fileId")
+    const params = {
+        Bucket: 'fastfile1',
+        Key: fileId
+    }
+
+    try {
+        const deleteCommand = new DeleteObjectCommand(params)
+        await S3.send(deleteCommand)
+        return c.json({ success: true });
+    } catch (error) {
+        console.error('Error deleting file:', error)
         return c.json({ success: false, error: String(error) });
     }
 })
