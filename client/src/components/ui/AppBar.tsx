@@ -22,6 +22,10 @@ export default function AppBar() {
                     </div>
                     <div className="hidden md:block">
                         <div className="flex items-baseline space-x-4">
+                            {window.location.pathname === '/' ? null : <Button className="py-5 px-8 text-[16px] bg-inherit border-[#04c8bb] border hover:bg-inherit hover:border-[#92efe6]">
+                                <Link to="/" className="font-bold text-[#04c8bb] hover:text-[#92efe6]">Send More Files</Link>
+                            </Button>}
+
                             <Button className="py-5 px-12 text-[16px] w-0 bg-inherit border-[#04c8bb] border hover:bg-inherit hover:border-[#92efe6]">
                                 <Link to="/login" className="font-bold text-[#04c8bb] hover:text-[#92efe6]">Log in</Link>
                             </Button>

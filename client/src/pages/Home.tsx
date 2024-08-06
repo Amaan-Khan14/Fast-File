@@ -28,7 +28,7 @@ export default function Home() {
 
         try {
             setUploadProgress('Uploading...');
-            const response = await axios.post('http://localhost:44179/upload', formData, {
+            const response = await axios.post('http://localhost:8787/upload', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 },
@@ -38,7 +38,9 @@ export default function Home() {
             if (response.data.success) {
                 setUploadProgress('Upload successful!');
                 console.log('Download URL:', response.data.url);
-                navigate('/upload-success', { state: { url: response.data.url } });
+                let fileId = response.data.url.split('/')[3]
+                fileId = fileId.split('?')[0]
+                navigate('/upload-success', { state: { fileId: fileId } });
             } else {
                 setUploadProgress(`Upload failed: ${response.data.error}`);
             }

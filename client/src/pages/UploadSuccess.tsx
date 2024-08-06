@@ -7,11 +7,13 @@ import QRCode from 'react-qr-code';
 
 export default function UploadSuccessPage() {
     const location = useLocation();
-    const { url } = location.state as { url: string };
+    const { fileId } = location.state as { fileId: string };
     const [showQRCode, setShowQRCode] = useState(false);
 
+
+    const downloadUrl = `${window.location.origin}/download/${fileId}`;
     const copyToClipboard = () => {
-        navigator.clipboard.writeText(url);
+        navigator.clipboard.writeText(downloadUrl);
         alert('URL copied to clipboard!');
     };
 
@@ -30,7 +32,7 @@ export default function UploadSuccessPage() {
                     <CardContent>
                         <p className="text-gray-300 mb-4">Your file has been successfully uploaded. Here's the download URL:</p>
                         <div className="bg-[#16a394] p-4 rounded-md overflow-x-auto">
-                            <p className="text-white break-all">{url.slice(0, 64) + " " + "..."}</p>
+                            <p className="text-white break-all">{downloadUrl}</p>
                         </div>
                         <div className="flex justify-between mt-4 space-x-4">
                             <Button onClick={copyToClipboard} className="bg-inherit border w-full border-[#04c8bb] text-[#04c8bb] hover:text-[#92efe6] hover:border-[#92efe6] font-semibold hover:bg-inherit">
@@ -48,7 +50,7 @@ export default function UploadSuccessPage() {
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-inherit border-white border-2 p-6 rounded-lg">
                         <QRCode
-                            value={url}
+                            value={downloadUrl}
                             size={256}
                             style={{ height: "auto", maxWidth: "100%", width: "100%" }}
                             viewBox={`0 0 256 256`}
