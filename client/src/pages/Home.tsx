@@ -20,15 +20,37 @@ export default function Home() {
         }
     };
 
-    const uploadFiles = async () => {
+
+    const encryptAndUploadFiles = async () => {
+        const encryptionKey = await window.crypto.subtle.generateKey(
+            { name: "AES-GCM", length: 256 },
+            true,
+            ["encrypt", "decrypt"]
+        );
+
+        const encryptedFiles: File[] = [];
+
+        for (const file of selectedFiles) {
+            const fileBuffer = await file.arrayBuffer();
+            const iv = window.crypto.getRandomValues(new Uint8Array(12));
+            const encryptedContent = await window.crypto.subtle.encrypt(
+                { name: "AES-GCM", iv: iv },
+                encryptionKey,
+                fileBuffer
+            );
+
+            const encryptedBlob = new Blob([iv, encryptedContent], { type: 'application/octet-stream' });
+            encryptedFiles.push(new File([encryptedBlob], file.name + '.encrypted'));
+        }
+
         const formData = new FormData();
-        selectedFiles.forEach((file) => {
+        encryptedFiles.forEach((file) => {
             formData.append('file', file);
         });
 
         try {
             setUploadProgress('Uploading...');
-            const response = await axios.post('http://localhost:44179/upload', formData, {
+            const response = await axios.post('http://localhost:8787/upload', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 },
@@ -38,7 +60,14 @@ export default function Home() {
             if (response.data.success) {
                 setUploadProgress('Upload successful!');
                 console.log('Download URL:', response.data.url);
-                navigate('/upload-success', { state: { url: response.data.url } });
+                let fileId = response.data.url.split('/')[3];
+                fileId = fileId.split('?')[0];
+
+                // Export the key as JWK
+                const exportedKey = await window.crypto.subtle.exportKey("jwk", encryptionKey);
+                const keyString = JSON.stringify(exportedKey);
+
+                navigate('/upload-success', { state: { fileId: fileId, encryptionKey: keyString } });
             } else {
                 setUploadProgress(`Upload failed: ${response.data.error}`);
             }
@@ -46,6 +75,8 @@ export default function Home() {
             setUploadProgress(`Upload failed: ${error instanceof Error ? error.message : String(error)}`);
         }
     };
+
+
 
     return (
         <div className="bg-gradient-to-b from-[#090a15] via-[#0b1d23] to-[#090a15] min-h-screen">
@@ -74,7 +105,7 @@ export default function Home() {
                                     <p className='mt-2'>{selectedFiles.length} file(s) selected</p>
                                 </div>
                                 {
-                                    selectedFiles.length > 0 ? <Button onClick={uploadFiles} className="mt-4 bg-[#187367] text-white">
+                                    selectedFiles.length > 0 ? <Button onClick={encryptAndUploadFiles} className="mt-4 bg-[#187367] text-white">
                                         Upload Files
                                     </Button> : <Button disabled className="mt-4 bg-[#187367] text-white">
                                         Upload Files

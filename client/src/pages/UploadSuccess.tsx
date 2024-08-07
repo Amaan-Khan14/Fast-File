@@ -1,17 +1,21 @@
 import { useState } from 'react';
 import AppBar from '@/components/ui/AppBar';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { useLocation } from 'react-router-dom';
 import QRCode from 'react-qr-code';
+import { Input } from '@/components/ui/input';
+
 
 export default function UploadSuccessPage() {
     const location = useLocation();
-    const { url } = location.state as { url: string };
+    const { fileId, encryptionKey } = location.state as { fileId: string, encryptionKey: string };
     const [showQRCode, setShowQRCode] = useState(false);
 
+    const downloadUrl = `${window.location.origin}/download/${fileId}?key=${encodeURIComponent(encryptionKey)}`;
+
     const copyToClipboard = () => {
-        navigator.clipboard.writeText(url);
+        navigator.clipboard.writeText(downloadUrl);
         alert('URL copied to clipboard!');
     };
 
@@ -20,27 +24,55 @@ export default function UploadSuccessPage() {
     };
 
     return (
+
         <div className='bg-gradient-to-b from-[#090a15] via-[#0b1d23] to-[#090a15] min-h-screen'>
             <AppBar />
             <div className="mt-44 flex items-center justify-center">
-                <Card className="bg-inherit p-10 rounded-lg w-full max-w-2xl border-[#b7f4ee]">
+                <Card className="bg-inherit p-10 rounded-lg w-full max-w-4xl border-[#b7f4ee]">
                     <CardHeader>
-                        <h1 className="text-2xl font-bold text-center text-white">Upload Successful!</h1>
+                        <h1 className="text-4xl font-semibold text-center bg-gradient-to-r from-green-50 to-emerald-300 bg-clip-text text-transparent">Upload complete! Your file is ready to share!</h1>
                     </CardHeader>
                     <CardContent>
-                        <p className="text-gray-300 mb-4">Your file has been successfully uploaded. Here's the download URL:</p>
+                        <p className="text-gray-400 mb-4 text-2xl text-center mt-5">You can now share it using the link provided</p>
                         <div className="bg-[#16a394] p-4 rounded-md overflow-x-auto">
-                            <p className="text-white break-all">{url.slice(0, 64) + " " + "..."}</p>
+                            <Input
+                                type="text"
+                                value={downloadUrl}
+                                readOnly
+                                className="flex-grow text-lg bg-inherit focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:ring-offset-gray-600 border-0 text-white p-2 rounded-l"
+                            />
                         </div>
                         <div className="flex justify-between mt-4 space-x-4">
                             <Button onClick={copyToClipboard} className="bg-inherit border w-full border-[#04c8bb] text-[#04c8bb] hover:text-[#92efe6] hover:border-[#92efe6] font-semibold hover:bg-inherit">
                                 Copy URL to Clipboard
                             </Button>
                             <Button onClick={toggleQRCode} className="bg-inherit border w-full border-[#04c8bb] text-[#04c8bb] hover:text-[#92efe6] hover:border-[#92efe6] font-semibold hover:bg-inherit">
-                                {showQRCode ? 'Hide QR Code' : 'Show QR Code'}
+                                {showQRCode ? null : 'Show QR Code'}
                             </Button>
                         </div>
+                        <div className='mt-10 mx-20 gap-4 text-white grid grid-cols-2'>
+                            <div className='mx-10 text-3xl font-semibold tracking-wider text-[#92efe6] flex items-center'>
+                                <img src="/en.png" alt="Ciphered" className="mx-2 h-10 w-10" />
+                                <div>
+                                    <span>Ciphered</span>
+                                    <p className='text-sm mt-2 text-gray-500 tracking-tight'>End-to-end encrypted</p>
+                                </div>
+
+                            </div>
+                            <div className='mx-10 text-3xl font-semibold tracking-wider text-[#92efe6] flex items-center'>
+                                <img src="/upload.png" alt="Transmitted" className="mx-2 h-10 w-10" />
+                                <div>
+                                    <span>Transmitted</span>
+                                    <p className='text-base mt-2 text-gray-500 tracking-tighter'>You can close this page now</p>
+                                </div>
+                            </div>
+                        </div>
                     </CardContent>
+                    <CardFooter className="flex justify-center">
+                        <p className="text-gray-400 text-sm">
+                            Expires in 24 hours
+                        </p>
+                    </CardFooter>
                 </Card>
             </div>
 
@@ -48,7 +80,7 @@ export default function UploadSuccessPage() {
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-inherit border-white border-2 p-6 rounded-lg">
                         <QRCode
-                            value={url}
+                            value={downloadUrl}
                             size={256}
                             style={{ height: "auto", maxWidth: "100%", width: "100%" }}
                             viewBox={`0 0 256 256`}
@@ -60,5 +92,6 @@ export default function UploadSuccessPage() {
                 </div>
             )}
         </div>
+
     );
 }
