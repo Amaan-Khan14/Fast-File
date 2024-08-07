@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { S3Client, ListBucketsCommand, PutObjectCommand, GetObjectCommand, HeadObjectCommand, ServerSideEncryption, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, GetObjectCommand, HeadObjectCommand, ServerSideEncryption, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { v4 as uuid } from "uuid";
 import JSZip from "jszip";
