@@ -72,7 +72,6 @@ export default function DownloadPage() {
             setError('An error occurred while deleting the file');
         }
     };
-
     const handleDownload = async () => {
         if (fileInfo && encryptionKey) {
             try {
@@ -91,7 +90,6 @@ export default function DownloadPage() {
                 const blob = new Blob([decryptedContent], { type: 'application/octet-stream' });
                 const url = URL.createObjectURL(blob);
 
-                // Extract the original filename from the URL
                 const urlObj = new URL(fileInfo.url);
                 const contentDisposition = urlObj.searchParams.get('response-content-disposition');
                 let originalFilename = 'downloaded_file';
@@ -101,10 +99,11 @@ export default function DownloadPage() {
                         originalFilename = filenameMatch[1].replace('.encrypted', '');
                     }
                 }
+                console.log('Original filename:', originalFilename);
 
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = originalFilename;
+                a.download = originalFilename.replace(/_$/, '');
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
@@ -136,23 +135,23 @@ export default function DownloadPage() {
         <div className='bg-gradient-to-b from-[#090a15] via-[#0b1d23] to-[#090a15] min-h-screen'>
             <AppBar />
             <div className="mt-44 flex items-center justify-center">
-                <Card className="bg-inherit p-5 rounded-lg w-full max-w-5xl border-white">
+                <Card className="bg-inherit p-5 rounded-lg w-full max-w-5xl border-[#b7f4ee]">
 
                     <CardContent>
                         <div className="grid grid-cols-2 gap-8">
                             <CardHeader>
                                 <div>
-                                    <div className="flex justify-between gap-4 items-center bg-[#0b1d23] p-3 rounded mb-4">
+                                    <div className="flex justify-between gap-4 items-center bg-[#16a394] p-3 rounded mb-4">
                                         <div className="flex items-center w-64">
                                             <span className="mr-2">📷</span>
                                             <Input
                                                 type="text"
                                                 value={fileName}
                                                 readOnly
-                                                className="flex-grow bg-[#0b1d23] focus-visible:ring-0 focus-visible:ring-offset-0 border-0 text-base text-white p-2 rounded-l"
+                                                className="flex-grow bg-inherit focus-visible:ring-0 focus-visible:ring-offset-0 border-0 text-base text-white p-2 rounded-l"
                                             />
                                         </div>
-                                        <span className="text-gray-400 ">{size
+                                        <span className="text-white ">{size
                                             ? size < 1024
                                                 ? `${size} B`
                                                 : size < 1024 * 1024
@@ -161,7 +160,7 @@ export default function DownloadPage() {
                                             : null
                                         }</span>
                                     </div>
-                                    <Button onClick={handleDownload} className="w-full bg-[#04c8bb] text-white font-semibold hover:bg-[#92efe6] mb-4">
+                                    <Button onClick={handleDownload} className="w-full bg-inherit border border-[#04c8bb] text-[#04c8bb] hover:text-[#92efe6] hover:border-[#92efe6] font-semibold hover:bg-inherit mb-4">
                                         Download file
                                     </Button>
                                 </div>
@@ -170,9 +169,9 @@ export default function DownloadPage() {
 
                             <div>
                                 <p className="my-5">
-                                    <h1 className="text-4xl font-bold text-white">You've got a file!</h1>
+                                    <h1 className="text-4xl font-bold bg-gradient-to-r from-teal-500 to-teal-800 bg-clip-text text-transparent">You've got a file!</h1>
                                 </p>
-                                <p className="text-white font-semibold text-xl mb-2">Share this file</p>
+                                <p className="text-white font-medium text-xl my-2">Share this file</p>
                                 <div className="flex mb-4 gap-2">
                                     <Input
                                         type="text"
@@ -180,7 +179,7 @@ export default function DownloadPage() {
                                         readOnly
                                         className="flex-grow text-base bg-[#0b1d23] focus-visible:ring-0 focus-visible:ring-offset-1 focus-visible:ring-offset-gray-600 border border-gray-700 text-white p-2 rounded-l"
                                     />
-                                    <Button onClick={copyToClipboard} className="bg-[#04c8bb] font-bold text-white hover:bg-[#92efe6] rounded-r">
+                                    <Button onClick={copyToClipboard} className="bg-inherit border w-auto border-[#04c8bb] text-[#04c8bb] hover:text-[#92efe6] hover:border-[#92efe6] font-semibold hover:bg-inherit">
                                         Copy link
                                     </Button>
                                 </div>

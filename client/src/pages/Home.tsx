@@ -102,12 +102,12 @@ export default function Home() {
                                     />
                                 </div>
                                 <div className="mt-4 text-white text-center">
-                                    <p className='mt-2'>{selectedFiles.length} file(s) selected</p>
+                                    <p className='mt-2 mb-5'>{selectedFiles.length} file(s) selected</p>
                                 </div>
                                 {
-                                    selectedFiles.length > 0 ? <Button onClick={encryptAndUploadFiles} className="mt-4 bg-[#187367] text-white">
+                                    selectedFiles.length > 0 ? <Button onClick={encryptAndUploadFiles} className="bg-[#187367] text-white">
                                         Upload Files
-                                    </Button> : <Button disabled className="mt-4 bg-[#187367] text-white">
+                                    </Button> : <Button disabled className="bg-[#187367] text-white">
                                         Upload Files
                                     </Button>
                                 }
@@ -115,21 +115,22 @@ export default function Home() {
                             </CardHeader>
                         </Card>
                         <Card className="bg-inherit border-0 ml-10 w-full flex items-center flex-col">
-                            <h2 className="text-4xl font-bold bg-gradient-to-r from-teal-100 to-teal-400 bg-clip-text text-transparent my-5">Seamless, secure file sharing with peace of mind and privacy.
+                            <h2 className="text-4xl font-bold bg-gradient-to-r from-teal-100 to-teal-400 bg-clip-text text-transparent my-5">
+                                Seamless, secure file sharing with peace of mind and privacy.
                             </h2>
                             <p className="text-gray-300 text-xl tracking-normal font-">
                                 FastFile leverages advanced <span className='font-bold text-teal-400 tracking-wider'>
                                     <TooltipProvider>
                                         <Tooltip>
-                                            <TooltipTrigger>server-side encryption</TooltipTrigger>
+                                            <TooltipTrigger>end-to-end encryption</TooltipTrigger>
                                             <TooltipContent>
                                                 <Card className='bg-[#187367] border-0 p-2 text-white text-base w-72 tracking-normal'>
-                                                    Server-side encryption rigorously protects your files, with encryption keys securely managed and access tightly controlled. Generated links include a time-bound token, allowing secure sharing while preserving stringent privacy measures.
+                                                    End-to-end encryption ensures that your files are encrypted on your device before uploading. Only you and those you share the decryption key with can access the original files. The server never sees the unencrypted data.
                                                 </Card>
                                             </TooltipContent>
                                         </Tooltip>
                                     </TooltipProvider>
-                                </span> to rigorously protect your files during storage. Expiring access links further ensure that your data remains private and impermanent, adhering to strict security protocols.
+                                </span> to rigorously protect your files during transfer and storage. Secure sharing links include the necessary decryption information, ensuring that only intended recipients can access your files.
                             </p>
                         </Card>
                     </Card>
