@@ -116,7 +116,7 @@ uploadRoute.get('/download/:fileId', async (c) => {
         const urlCommand = new GetObjectCommand({
             Bucket: 'fastfile1',
             Key: fileId,
-            ResponseContentDisposition: `attachment; filename="${fileId.split("-")[1]}"`,
+            ResponseContentDisposition: `attachment; filename="${fileId.split("-")[5]}"`,
             ResponseContentType: headResult.ContentType,
         });
 

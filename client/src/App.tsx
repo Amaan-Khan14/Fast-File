@@ -6,6 +6,7 @@ import UserHome from './pages/UserHome';
 import Home from './pages/Home';
 import UploadSuccess from './pages/UploadSuccess';
 import DownloadPage from './pages/DownloadPage';
+import { Toaster } from './components/ui/toaster';
 
 export default function MyComponent() {
   return (
@@ -21,6 +22,7 @@ export default function MyComponent() {
           <Route path="/login" element={<Signin />} />
           <Route path='/user/dashboard' element={<Dashboard />} />
         </Routes>
+        <Toaster />
       </div>
     </Router>
   )

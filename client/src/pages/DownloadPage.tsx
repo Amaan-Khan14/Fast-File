@@ -2,6 +2,8 @@ import AppBar from "@/components/ui/AppBar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { toast } from "@/components/ui/use-toast";
+import { APP_URL } from "@/config";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import QRCode from "react-qr-code";
@@ -27,7 +29,7 @@ export default function DownloadPage() {
     useEffect(() => {
         const fetchFileInfo = async () => {
             try {
-                const response = await axios.get<{ success: boolean; url: string; error?: string; size: number }>(`http://localhost:8787/download/${fileId}`)
+                const response = await axios.get<{ success: boolean; url: string; error?: string; size: number }>(`${APP_URL}/download/${fileId}`)
                 if (response.data.success) {
                     setFileInfo({ url: response.data.url });
                     setSize(response.data.size);
@@ -61,15 +63,23 @@ export default function DownloadPage() {
 
     const deleteFile = async () => {
         try {
-            const response = await axios.delete(`http://localhost:8787/${fileId}`);
+            const response = await axios.delete(`${APP_URL}/${fileId}`);
             if (response.data.success) {
-                console.log('File deleted successfully');
+                toast({
+                    title: "Success",
+                    description: "File deleted successfully",
+                });
                 navigate('/');
             } else {
                 setError(response.data.error || "Failed to delete file");
             }
         } catch (error) {
             setError('An error occurred while deleting the file');
+            toast({
+                title: "Error",
+                description: "An error occurred while deleting the file",
+                duration: 5000,
+            })
         }
     };
     const handleDownload = async () => {
@@ -99,7 +109,6 @@ export default function DownloadPage() {
                         originalFilename = filenameMatch[1].replace('.encrypted', '');
                     }
                 }
-                console.log('Original filename:', originalFilename);
 
                 const a = document.createElement('a');
                 a.href = url;
@@ -128,7 +137,10 @@ export default function DownloadPage() {
     const fileName = encryptedFileName?.split('.encrypted')[0]
     const copyToClipboard = () => {
         navigator.clipboard.writeText(window.location.href as string);
-        alert('URL copied to clipboard!');
+        toast({
+            title: "Success",
+            description: "URL copied to clipboard",
+        })
     };
 
     return (
@@ -136,7 +148,6 @@ export default function DownloadPage() {
             <AppBar />
             <div className="mt-44 flex items-center justify-center">
                 <Card className="bg-inherit p-5 rounded-lg w-full max-w-5xl border-[#b7f4ee]">
-
                     <CardContent>
                         <div className="grid grid-cols-2 gap-8">
                             <CardHeader>
