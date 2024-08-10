@@ -124,6 +124,7 @@ uploadRoute.get('/download/:fileId', async (c) => {
 
         const url = await getSignedUrl(S3, urlCommand);
         return c.json({ success: true, url: url });
+
     } catch (error) {
         console.error('Error downloading file:', error)
         return c.json({ success: false, error: String(error) });

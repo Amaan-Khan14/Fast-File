@@ -28,6 +28,7 @@ export default function UploadSuccessPage() {
             description: "URL copied to clipboard",
             duration: 5000,
         });
+
     };
 
     const toggleQRCode = () => {
@@ -51,6 +52,7 @@ export default function UploadSuccessPage() {
                                 readOnly
                                 className="flex-grow text-base sm:text-lg bg-inherit focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:ring-offset-gray-600 border-0 text-white p-2 rounded-l w-full"
                             />
+
                         </div>
                         <div className="flex flex-col sm:flex-row justify-between mt-4 space-y-2 sm:space-y-0 sm:space-x-4">
                             <Button onClick={copyToClipboard} className="bg-inherit border w-full border-[#04c8bb] text-[#04c8bb] hover:text-[#92efe6] hover:border-[#92efe6] font-semibold hover:bg-inherit text-sm sm:text-base">

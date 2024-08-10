@@ -8,6 +8,7 @@ import UploadSuccess from './pages/UploadSuccess';
 import DownloadPage from './pages/DownloadPage';
 import { Toaster } from './components/ui/toaster';
 
+
 export default function MyComponent() {
   return (
 
@@ -17,6 +18,7 @@ export default function MyComponent() {
           <Route path="/" element={<Home />} />
           <Route path='/upload-success' element={<UploadSuccess />} />
           <Route path='/download/:fileId' element={<DownloadPage />} />
+
           <Route path="/user/home" element={<UserHome />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/login" element={<Signin />} />
