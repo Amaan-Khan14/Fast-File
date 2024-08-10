@@ -1,4 +1,3 @@
-import AppBar from "@/components/ui/AppBar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -26,10 +25,33 @@ export default function DownloadPage() {
         setShowQRCode(!showQRCode);
     };
 
+    const [, setIsLoggedIn] = useState(false);
+
+
+    async function checkLoginStatus() {
+        try {
+            await axios.get(`${APP_URL}/userupload/files`, {
+                withCredentials: true
+            });
+            setIsLoggedIn(true);
+            return true;
+        } catch (error) {
+            setIsLoggedIn(false);
+            return false;
+        }
+    }
+
     useEffect(() => {
         const fetchFileInfo = async () => {
+            const loggedIn = await checkLoginStatus();
             try {
-                const response = await axios.get<{ success: boolean; url: string; error?: string; size: number }>(`${APP_URL}/download/${fileId}`)
+                const response = await axios.get<{ success: boolean; url: string; error?: string; size: number }>(
+                    loggedIn ? `${APP_URL}/userupload/download/${fileId}` : `${APP_URL}/download/${fileId}`,
+                    loggedIn ? { withCredentials: true } : {}
+                );
+                setFileInfo(response.data);
+
+
                 if (response.data.success) {
                     setFileInfo({ url: response.data.url });
                     setSize(response.data.size);
@@ -154,8 +176,7 @@ export default function DownloadPage() {
     }
 
     return (
-        <div className='bg-gradient-to-b from-[#090a15] via-[#0b1d23] to-[#090a15] min-h-screen'>
-            <AppBar />
+        <div>
             <div className="mt-20 sm:mt-44 mb-10 mx-4 sm:mx-10 flex items-center justify-center">
                 <Card className="bg-inherit p-3 sm:p-5 rounded-lg w-full max-w-5xl border-[#b7f4ee] mb-10">
                     <CardContent>
@@ -172,7 +193,7 @@ export default function DownloadPage() {
                                                 className="flex-grow bg-inherit focus-visible:ring-0 focus-visible:ring-offset-0 border-0 text-sm sm:text-base text-white p-1 sm:p-2 rounded-l"
                                             />
                                         </div>
-                                        <span className="text-white text-sm sm:text-base">{size
+                                        <span className="text-white w-1/4 text-end text-sm sm:text-base">{size
                                             ? size < 1024
                                                 ? `${size} B`
                                                 : size < 1024 * 1024

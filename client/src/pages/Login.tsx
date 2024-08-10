@@ -7,16 +7,36 @@ import { APP_URL } from "@/config";
 import { SignInSchema } from "@amaank14/zod-common";
 import { ReloadIcon } from "@radix-ui/react-icons";
 import axios from "axios";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 export default function Signin() {
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
+    const [isReloading, setIsReloading] = useState(true);
     const [inputs, setInputs] = useState<SignInSchema>({
         username: '',
         password: ''
     })
+    
+    
+    useEffect(() => {
+        checkExistingSession();
+    }, []);
+
+    async function checkExistingSession() {
+        setIsReloading(true);
+        try {
+            await axios.get(`${APP_URL}/userupload/files`, {
+                withCredentials: true
+            });
+            navigate('/user/home');
+        } catch (error) {
+            console.log('Not logged in:', error);
+        } finally {
+            setIsReloading(false);
+        }
+    }
 
     async function handleSubmit() {
         setIsLoading(true);
@@ -29,7 +49,7 @@ export default function Signin() {
                 description: "Welcome back! You've successfully signed in.",
                 duration: 5000,
             })
-            navigate('/blogs')
+            navigate('/')
         } catch (error) {
             console.log(error)
             let errorMessage = "An error occurred during sign in. Please try again.";
@@ -48,6 +68,21 @@ export default function Signin() {
             setIsLoading(false);
         }
     }
+
+    if (isReloading) {
+        return (
+            <div className="bg-gradient-to-b from-[#090a15] via-[#0b1d23] to-[#090a15] min-h-screen flex items-center justify-center">
+                <div className="text-center">
+                    <div className="mb-4">
+                        <ReloadIcon className="animate-spin h-12 w-12 text-[#6aebde] mx-auto" />
+                    </div>
+                    <p className="text-[#b7f4ee] text-lg font-semibold">Loading...</p>
+                    <p className="text-[#8a9a9d] text-sm mt-2">Please wait while we fetch your content</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="flex min-h-screen bg-gradient-to-r from-white to-gray-100">
             <div className="w-full lg:w-1/2 p-12 flex flex-col justify-center items-center">
@@ -72,7 +107,6 @@ export default function Signin() {
                                     })
                                 }} />
                             </div>
-
                         </form>
                     </CardContent>
                     <CardFooter className="flex flex-col">

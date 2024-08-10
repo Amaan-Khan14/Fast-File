@@ -1,5 +1,4 @@
 import { useState, ChangeEvent } from 'react';
-import AppBar from "@/components/ui/AppBar";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from '@/components/ui/button';
@@ -8,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@radix-ui/react-tooltip';
 import { APP_URL } from '@/config';
 import { toast } from '@/components/ui/use-toast';
+import { useAuth } from '@/useAuth';
 
 
 export default function Home() {
@@ -15,6 +15,7 @@ export default function Home() {
     const [, setUploadProgress] = useState<string>('');
 
     const navigate = useNavigate();
+    const { checkLoginStatus } = useAuth()
 
     const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
         if (event.target.files) {
@@ -52,13 +53,17 @@ export default function Home() {
 
         try {
             setUploadProgress('Uploading...');
-            const response = await axios.post(`${APP_URL}/upload`, formData, {
-
-                headers: {
-                    'Content-Type': 'multipart/form-data'
-                },
-                withCredentials: true
-            });
+            const loggedIn = await checkLoginStatus();
+            const response = await axios.post(
+                loggedIn ? `${APP_URL}/userupload` : `${APP_URL}/upload`,
+                formData,
+                {
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    },
+                    withCredentials: true
+                }
+            )
 
             if (response.data.success) {
                 setUploadProgress('Upload successful!');
@@ -83,10 +88,7 @@ export default function Home() {
     };
 
 
-
     return (
-        <div className="bg-gradient-to-b from-[#090a15] via-[#0b1d23] to-[#090a15] min-h-screen">
-            <AppBar />
             <div className="py-12 sm:py-24 px-4 sm:px-8">
                 <div className="max-w-screen-xl mx-auto">
                     <h1 className="text-3xl sm:text-4xl font-bold text-center mb-4 bg-gradient-to-r from-[#d9f9f6] to-teal-900 bg-clip-text text-transparent">
@@ -141,6 +143,5 @@ export default function Home() {
                     </Card>
                 </div>
             </div>
-        </div>
     );
 }
