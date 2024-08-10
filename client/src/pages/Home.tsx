@@ -53,6 +53,7 @@ export default function Home() {
         try {
             setUploadProgress('Uploading...');
             const response = await axios.post(`${APP_URL}/upload`, formData, {
+
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 },
@@ -72,6 +73,7 @@ export default function Home() {
                 const keyString = JSON.stringify(exportedKey);
 
                 navigate('/upload-success', { state: { fileId: fileId, encryptionKey: keyString } });
+
             } else {
                 setUploadProgress(`Upload failed: ${response.data.error}`);
             }
