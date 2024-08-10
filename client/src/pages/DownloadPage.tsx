@@ -34,7 +34,6 @@ export default function DownloadPage() {
                     setFileInfo({ url: response.data.url });
                     setSize(response.data.size);
 
-                    // Extract and import the encryption key
                     const urlParams = new URLSearchParams(window.location.search);
                     const keyString = urlParams.get('key');
                     if (keyString) {
@@ -84,42 +83,49 @@ export default function DownloadPage() {
     };
     const handleDownload = async () => {
         if (fileInfo && encryptionKey) {
-            try {
-                const response = await fetch(fileInfo.url);
-                const encryptedContent = await response.arrayBuffer();
+            const response = await fetch(fileInfo.url);
 
-                const iv = new Uint8Array(encryptedContent.slice(0, 12));
-                const data = new Uint8Array(encryptedContent.slice(12));
-
-                const decryptedContent = await window.crypto.subtle.decrypt(
-                    { name: "AES-GCM", iv: iv },
-                    encryptionKey,
-                    data
-                );
-
-                const blob = new Blob([decryptedContent], { type: 'application/octet-stream' });
-                const url = URL.createObjectURL(blob);
-
-                const urlObj = new URL(fileInfo.url);
-                const contentDisposition = urlObj.searchParams.get('response-content-disposition');
-                let originalFilename = 'downloaded_file';
-                if (contentDisposition) {
-                    const filenameMatch = contentDisposition.match(/filename="?(.+)"?/i);
-                    if (filenameMatch && filenameMatch[1]) {
-                        originalFilename = filenameMatch[1].replace('.encrypted', '');
-                    }
-                }
-
+            if (fileId?.includes('.zip')) {
                 const a = document.createElement('a');
-                a.href = url;
-                a.download = originalFilename.replace(/_$/, '');
+                a.href = response.url;
+                a.download = fileId?.split('.encrypted')[0] as string;
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-            } catch (error) {
-                setError('Failed to decrypt file: ' + (error instanceof Error ? error.message : String(error)));
+                URL.revokeObjectURL(response.url);
             }
+            else {
+                try {
+                    const encryptedContent = await response.arrayBuffer();
+                    const iv = new Uint8Array(encryptedContent.slice(0, 12));
+                    const data = new Uint8Array(encryptedContent.slice(12));
+
+
+                    const decryptedContent = await window.crypto.subtle.decrypt(
+                        { name: "AES-GCM", iv: iv },
+                        encryptionKey,
+                        data
+                    );
+
+                    const blob = new Blob([decryptedContent], { type: 'application/octet-stream' });
+                    const url = URL.createObjectURL(blob);
+
+                    const originalFilename = fileId?.split('.encrypted')[0]
+
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = originalFilename as string;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }
+
+                catch (error) {
+                    setError('Failed to decrypt file: ' + (error instanceof Error ? error.message : String(error)));
+                }
+            }
+
         } else if (!encryptionKey) {
             setError('Decryption key not found. Make sure you have the correct download link.');
         }
@@ -133,9 +139,7 @@ export default function DownloadPage() {
         return <div className="text-white">{error}</div>;
     }
 
-    const encryptedFileName = fileId?.split('-')[5]
-    const fileName = encryptedFileName?.split('.encrypted')[0]
-    const copyToClipboard = () => {
+    let copyToClipboard = () => {
         navigator.clipboard.writeText(window.location.href as string);
         toast({
             title: "Success",
@@ -143,17 +147,22 @@ export default function DownloadPage() {
         })
     };
 
+    let fileName = fileId;
+    if (!fileId?.includes('.zip')) {
+        fileName = fileId?.split('.encrypted')[0]
+    }
+
     return (
         <div className='bg-gradient-to-b from-[#090a15] via-[#0b1d23] to-[#090a15] min-h-screen'>
             <AppBar />
-            <div className="mt-44 flex items-center justify-center">
+            <div className="mt-44 mb-10 mx-10 flex items-center justify-center">
                 <Card className="bg-inherit p-5 rounded-lg w-full max-w-5xl border-[#b7f4ee]">
                     <CardContent>
                         <div className="grid grid-cols-2 gap-8">
                             <CardHeader>
                                 <div>
                                     <div className="flex justify-between gap-4 items-center bg-[#16a394] p-3 rounded mb-4">
-                                        <div className="flex items-center w-64">
+                                        <div className="flex items-center w-full">
                                             <span className="mr-2">📷</span>
                                             <Input
                                                 type="text"
@@ -162,7 +171,7 @@ export default function DownloadPage() {
                                                 className="flex-grow bg-inherit focus-visible:ring-0 focus-visible:ring-offset-0 border-0 text-base text-white p-2 rounded-l"
                                             />
                                         </div>
-                                        <span className="text-white ">{size
+                                        <span className="text-white">{size
                                             ? size < 1024
                                                 ? `${size} B`
                                                 : size < 1024 * 1024

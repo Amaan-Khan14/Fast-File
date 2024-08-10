@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { S3Client, PutObjectCommand, GetObjectCommand, HeadObjectCommand, ServerSideEncryption, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { v4 as uuid } from "uuid";
-import JSZip from "jszip";
+import { zipSync } from "fflate";
 
 type CustomContext = {
     s3: S3Client;
@@ -44,14 +44,14 @@ uploadRoute.post('/upload', async (c) => {
     let params, fileName, contentType, fileSize
 
     if (files.length > 1) {
-        fileName = `${uniqueFileId}.zip`
-        const zip = new JSZip()
+        fileName = "fastfile.zip"
+        const zip: { [key: string]: Uint8Array } = {}
         for (const file of files) {
             const arrayBuffer = await file.arrayBuffer()
-            zip.file(file.name, arrayBuffer)
+            zip[file.name] = new Uint8Array(arrayBuffer)
 
         }
-        const zipContent = await zip.generateAsync({ type: 'uint8array' })
+        const zipContent = zipSync(zip)
 
         fileSize = zipContent.byteLength
         contentType = 'application/zip'
@@ -66,7 +66,7 @@ uploadRoute.post('/upload', async (c) => {
     } else {
         const file = files[0]
         const arrayBuffer = await file.arrayBuffer()
-        fileName = `${uniqueFileId}-${file.name}`
+        fileName = `${uniqueFileId}-${file.name}`.slice(37,)
         contentType = file.type
         fileSize = arrayBuffer.byteLength
         params = {
@@ -90,7 +90,7 @@ uploadRoute.post('/upload', async (c) => {
 
         const url = await getSignedUrl(S3, urlCommand, { expiresIn: 24 * 3600 });
 
-        return c.json({ success: true, url: url });
+        return c.json({ success: true, fileSize, url: url });
 
     } catch (error) {
         console.error('Error uploading file:', error)
@@ -116,7 +116,7 @@ uploadRoute.get('/download/:fileId', async (c) => {
         const urlCommand = new GetObjectCommand({
             Bucket: 'fastfile1',
             Key: fileId,
-            ResponseContentDisposition: `attachment; filename="${fileId.split("-")[5]}"`,
+            ResponseContentDisposition: `attachment; filename="${fileId}"`,
             ResponseContentType: headResult.ContentType,
         });
 

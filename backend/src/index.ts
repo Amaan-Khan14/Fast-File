@@ -14,7 +14,7 @@ const app = new Hono<{
 }>()
 
 app.use(cors({
-    origin: ['http://localhost:5174', 'https://d2wkxxfjfzw76y.cloudfront.net', "https://fastfile.myamaan.tech"],
+    origin: ['http://localhost:5173', "https://d3ntc2ow5mg5tz.cloudfront.net", "https://fastfile.myamaan.tech"],
     credentials: true,
 }))
 

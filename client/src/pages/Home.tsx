@@ -95,7 +95,7 @@ export default function Home() {
                     </p>
                     <Card className="bg-inherit p-4 sm:p-10 rounded-lg flex flex-col lg:flex-row justify-between h-full w-full border-[#b7f4ee]">
                         <Card className="bg-inherit flex flex-col justify-center items-center border-dashed p-3 sm:p-5 border-[#187367] border-2 w-full h-auto sm:h-96 mb-6 lg:mb-0">
-                            <CardHeader className='h-full mt-4 sm:mt-10 w-full'>
+                            <CardHeader className='h-full mt-4 sm:mt-10'>
                                 <div className="max-w-sm w-full">
                                     <Input
                                         id="file"
@@ -118,7 +118,7 @@ export default function Home() {
                             </CardHeader>
                         </Card>
                         <Card className="bg-inherit border-0 lg:ml-10 w-full flex items-center flex-col">
-                            <h2 className="text-2xl sm:text-4xl font-bold bg-gradient-to-r from-teal-100 to-teal-400 bg-clip-text text-transparent my-5 text-center">
+                            <h2 className="text-2xl sm:text-4xl font-bold bg-gradient-to-r from-teal-100 to-teal-400 bg-clip-text text-transparent my-5 ">
                                 Seamless, secure file sharing with peace of mind and privacy.
                             </h2>
                             <p className="text-gray-300 text-base sm:text-xl tracking-normal">
