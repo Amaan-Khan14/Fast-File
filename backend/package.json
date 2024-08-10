@@ -5,7 +5,6 @@
     "deploy": "wrangler deploy --minify src/index.ts"
   },
   "dependencies": {
-    "@amaank14/fastfile1-common": "^1.0.0",
     "@aws-sdk/client-s3": "^3.623.0",
     "@aws-sdk/s3-request-presigner": "^3.623.0",
     "@prisma/client": "5.17.0",
