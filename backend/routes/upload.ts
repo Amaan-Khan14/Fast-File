@@ -85,10 +85,11 @@ uploadRoute.post('/upload', async (c) => {
         const urlCommand = new GetObjectCommand({
             Bucket: 'fastfile1',
             Key: fileName,
-            ResponseContentDisposition: `attachment; filename="${fileName}"`
+            ResponseContentDisposition: `attachment; filename="${fileName}"`,
+            ResponseExpires: new Date(Date.now() + 24 * 3600 * 1000),
         })
 
-        const url = await getSignedUrl(S3, urlCommand, { expiresIn: 24 * 3600 });
+        const url = await getSignedUrl(S3, urlCommand);
 
         return c.json({ success: true, fileSize, url: url });
 
@@ -118,14 +119,12 @@ uploadRoute.get('/download/:fileId', async (c) => {
             Key: fileId,
             ResponseContentDisposition: `attachment; filename="${fileId}"`,
             ResponseContentType: headResult.ContentType,
+            ResponseExpires: new Date(Date.now() + 24 * 3600 * 1000),
         });
 
-        const [url, size] = await Promise.all([
-            getSignedUrl(S3, urlCommand, { expiresIn: 24 * 3600 }),
-            headResult.ContentLength
-        ])
+        const url = await getSignedUrl(S3, urlCommand);
+        return c.json({ success: true, url: url });
 
-        return c.json({ success: true, size, url });
     } catch (error) {
         console.error('Error downloading file:', error)
         return c.json({ success: false, error: String(error) });
