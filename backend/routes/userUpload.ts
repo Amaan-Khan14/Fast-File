@@ -54,7 +54,8 @@ userUploadRouter.use(async (c, next) => {
         return c.json({ message: 'Invalid Token' }, 401)
     }
 })
-userUploadRouter.post('/upload', async (c) => {
+
+userUploadRouter.post('/', async (c) => {
     const prisma = new PrismaClient({
         datasourceUrl: c.env.DATABASE_URL,
     }).$extends(withAccelerate())
@@ -76,7 +77,7 @@ userUploadRouter.post('/upload', async (c) => {
     let params, fileName, contentType, fileSize
 
     if (files.length > 1) {
-        fileName = `${uniqueFileId}.zip`
+        fileName = `fastfile.zip`
         const zip = new JSZip()
         for (const file of files) {
             const arrayBuffer = await file.arrayBuffer()
@@ -116,7 +117,7 @@ userUploadRouter.post('/upload', async (c) => {
             throw new Error("Error Uploading File to S3")
         }
 
-        const uploadedFile = await prisma.file.create({
+        await prisma.file.create({
             data: {
                 fileName: fileName,
                 s3Key: fileName,
@@ -137,18 +138,15 @@ userUploadRouter.post('/upload', async (c) => {
 
         return c.json({
             success: true,
-            file: {
-                fileName: fileName,
-                contentType: contentType,
-                size: fileSize,
-                url: url,
-            }
+            url: url,
+            size: fileSize,
         })
     } catch (error) {
         console.error('Error uploading file:', error)
         return c.json({ success: false, error: String(error) })
     }
 })
+
 userUploadRouter.get('/download/:fileId', async (c) => {
     const S3 = c.get('s3')
 
@@ -161,21 +159,19 @@ userUploadRouter.get('/download/:fileId', async (c) => {
     const file = await prisma.file.findFirst({
         where: {
             id: fileId
-        },
-        select: {
-            s3Key: true
         }
     })
 
-    console.log(file?.s3Key)
     const urlCommand = new GetObjectCommand({
         Bucket: 'fastfileforusers',
         Key: fileId,
         ResponseContentDisposition: `attachment;filename="${fileId.split('-')[5]}"`
     })
     try {
+
+        const result = await S3.send(urlCommand)
         const url = await getSignedUrl(S3, urlCommand);
-        return c.json({ success: true, url: url });
+        return c.json({ success: true, size: result.ContentLength, url: url });
     } catch (error) {
         console.error('Error downloading file:', error)
         return c.json({ success: false, error: String(error) });
