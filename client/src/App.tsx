@@ -10,6 +10,7 @@ import AppBar from './components/ui/AppBar';
 
 
 
+
 const AppBarWrapper: React.FC = () => {
   const location = useLocation();
   const hideAppBarPaths = ['/signup', '/login'];
@@ -26,7 +27,6 @@ export default function App() {
     <Router>
       <div className="bg-[#090a15] min-h-screen">
         <AppBarWrapper />
-        <div className="bg-gradient-to-b from-[#090a15] via-[#0b1d23] to-[#090a15]">
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path='/upload-success' element={<UploadSuccess />} />
@@ -37,7 +37,6 @@ export default function App() {
           </Routes>
           <Toaster />
         </div>
-      </div>
     </Router>
   );
 }

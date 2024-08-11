@@ -162,13 +162,12 @@ userUploadRouter.get('/download/:fileId', async (c) => {
         }
     })
 
-    const urlCommand = new GetObjectCommand({
-        Bucket: 'fastfileforusers',
-        Key: fileId,
-        ResponseContentDisposition: `attachment;filename="${fileId.split('-')[5]}"`
-    })
     try {
-
+        const urlCommand = new GetObjectCommand({
+            Bucket: 'fastfileforusers',
+            Key: fileId,
+            ResponseContentDisposition: `attachment;filename="${fileId}"`
+        })
         const result = await S3.send(urlCommand)
         const url = await getSignedUrl(S3, urlCommand);
         return c.json({ success: true, size: result.ContentLength, url: url });

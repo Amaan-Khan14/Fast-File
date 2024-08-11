@@ -8,7 +8,7 @@ export function useAuth() {
 
     const checkLoginStatus = async () => {
         try {
-            await axios.get(`${APP_URL}/userupload/files`, {
+            await axios.get(`${APP_URL}/user/me`, {
                 withCredentials: true
             });
             setIsLoggedIn(true);
@@ -25,5 +25,5 @@ export function useAuth() {
         checkLoginStatus();
     }, []);
 
-    return { isLoggedIn, isLoading, checkLoginStatus, setIsLoggedIn };
+    return { isLoggedIn, isLoading, setIsLoading, checkLoginStatus, setIsLoggedIn };
 }

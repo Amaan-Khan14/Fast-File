@@ -1,12 +1,13 @@
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Button } from '@/components/ui/button';
-import { Menubar, MenubarMenu, MenubarTrigger, MenubarContent, MenubarItem, MenubarSeparator } from '@/components/ui/menubar'; // Replace with your actual UI library
-import { APP_URL } from '@/config'; // Replace with your actual config file
+import { Menubar, MenubarMenu, MenubarTrigger, MenubarContent, MenubarItem, MenubarSeparator } from '@/components/ui/menubar';
+import { APP_URL } from '@/config';
 import { useAuth } from '@/useAuth';
+import { Avatar } from '@/components/ui/avatar';
 
 export default function AppBar() {
-    const { isLoggedIn, setIsLoggedIn } = useAuth();
+    const { isLoggedIn, setIsLoggedIn, isLoading } = useAuth();
     const navigate = useNavigate();
 
 
@@ -21,6 +22,11 @@ export default function AppBar() {
             console.error('Logout failed:', error);
         }
     }
+
+    if (isLoading) {
+        return null;
+    }
+
 
     return (
         <nav className="p-4 sticky top-0 z-50">
@@ -40,9 +46,16 @@ export default function AppBar() {
                             )}
 
                             {isLoggedIn ? (
-                                <Button onClick={handleLogout} className="py-5 px-12 text-[16px] w-0 bg-inherit border-[#04c8bb] border hover:bg-inherit hover:border-[#92efe6]">
-                                    <span className="font-bold text-[#04c8bb] hover:text-[#92efe6]">Log out</span>
-                                </Button>
+                                <div className="flex items-center gap-4">
+                                    <Button onClick={handleLogout} className="py-5 px-12 text-[16px] bg-inherit border-[#04c8bb] border hover:bg-inherit hover:border-[#92efe6]">
+                                        <span className="font-bold text-[#04c8bb] hover:text-[#92efe6]">Log out</span>
+                                    </Button>
+                                    <Avatar className="h-10 w-10 rounded-full border-2 bg-gradient-to-br from-[#04c8bb] to-[#92efe6] border-[#04c8bb] overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300">
+                                        <Link to="/dashboard" className="flex items-center pl-3 justify-center  text-white font-semibold">
+                                            A
+                                        </Link>
+                                    </Avatar>
+                                </div>
                             ) : (
                                 <>
                                     <Button className="py-5 px-12 text-[16px] w-0 bg-inherit border-[#04c8bb] border hover:bg-inherit hover:border-[#92efe6]">
@@ -55,7 +68,7 @@ export default function AppBar() {
                             )}
                         </div>
                     </div>
-                    <Menubar className="md:hidden hover:bg-[#187367] flex bg-inherit  border-white/5">
+                    <Menubar className="md:hidden hover:bg-[#187367] flex bg-[#090a15]  border-white/5">
                         <MenubarMenu>
                             <MenubarTrigger className='cursor-pointer text-white'>
                                 <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" height="30" viewBox="0 0 50 50">
@@ -64,9 +77,15 @@ export default function AppBar() {
                             </MenubarTrigger>
                             <MenubarContent className="bg-inherit border-2 border-[#04c8bb]">
                                 {isLoggedIn ? (
-                                    <MenubarItem className="focus:bg-[#154f47]" onSelect={handleLogout}>
-                                        <span className="w-full font-bold text-white text-base">Log out</span>
-                                    </MenubarItem>
+                                    <>
+                                        <MenubarItem className="focus:bg-[#154f47]" onSelect={handleLogout}>
+                                            <span className="w-full font-bold text-white text-base">Log out</span>
+                                        </MenubarItem>
+                                        <MenubarSeparator className="bg-[#04c8bb]" />
+                                        <MenubarItem className="focus:bg-[#154f47]">
+                                            <Link to="/dashboard" className="w-full font-bold text-white text-base">Dashboard</Link>
+                                        </MenubarItem>
+                                    </>
                                 ) : (
                                     <>
                                         <MenubarItem className="focus:bg-[#154f47]">
