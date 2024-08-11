@@ -3,6 +3,8 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/use-toast";
 import { APP_URL } from "@/config";
+import { useAuth } from "@/useAuth";
+import { ReloadIcon } from "@radix-ui/react-icons";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import QRCode from "react-qr-code";
@@ -16,30 +18,32 @@ export default function DownloadPage() {
     const { fileId } = useParams<{ fileId: string }>();
     const [fileInfo, setFileInfo] = useState<FileInfo | null>(null);
     const [size, setSize] = useState<number | null>(null);
-    const [, setLoading] = useState<boolean>();
+    // const [, setLoading] = useState<boolean>();
     const [error, setError] = useState<string | null>(null);
     const [showQRCode, setShowQRCode] = useState(false);
     const [encryptionKey, setEncryptionKey] = useState<CryptoKey | null>(null);
+    const { isLoggedIn, checkLoginStatus, isLoading, setIsLoading } = useAuth()
     const navigate = useNavigate()
     const toggleQRCode = () => {
         setShowQRCode(!showQRCode);
     };
 
-    const [, setIsLoggedIn] = useState(false);
+
+    // const [, setIsLoggedIn] = useState(false);
 
 
-    async function checkLoginStatus() {
-        try {
-            await axios.get(`${APP_URL}/userupload/files`, {
-                withCredentials: true
-            });
-            setIsLoggedIn(true);
-            return true;
-        } catch (error) {
-            setIsLoggedIn(false);
-            return false;
-        }
-    }
+    // async function checkLoginStatus() {
+    //     try {
+    //         await axios.get(`${APP_URL}/userupload/files`, {
+    //             withCredentials: true
+    //         });
+    //         setIsLoggedIn(true);
+    //         return true;
+    //     } catch (error) {
+    //         setIsLoggedIn(false);
+    //         return false;
+    //     }
+    // }
 
     useEffect(() => {
         const fetchFileInfo = async () => {
@@ -75,7 +79,7 @@ export default function DownloadPage() {
             } catch (error) {
                 setError('An error occurred while fetching file information');
             } finally {
-                setLoading(false);
+                setIsLoading(false);
             }
         }
         fetchFileInfo();
@@ -84,17 +88,23 @@ export default function DownloadPage() {
 
     const deleteFile = async () => {
         try {
-            const response = await axios.delete(`${APP_URL}/${fileId}`);
+            const response = await axios.delete<{ success: boolean; url: string; error?: string; message?: string }>(
+                isLoggedIn ? `${APP_URL}/userupload/file/${fileId}` : `${APP_URL}/${fileId}`,
+                isLoggedIn ? { withCredentials: true } : {}
+            );
             if (response.data.success) {
+                setIsLoading(false);
                 toast({
                     title: "Success",
-                    description: "File deleted successfully",
+                    description: `${response.data.message}`,
                 });
                 navigate('/');
             } else {
+                setIsLoading(true);
                 setError(response.data.error || "Failed to delete file");
             }
         } catch (error) {
+            setIsLoading(true);
             setError('An error occurred while deleting the file');
             toast({
                 title: "Error",
@@ -154,8 +164,16 @@ export default function DownloadPage() {
         }
     };
 
-    if (!setLoading) {
-        return <div className="text-white">Loading...</div>;
+    if (isLoading) {
+        return <div className="bg-gradient-to-b from-[#090a15] via-[#0b1d23] to-[#090a15] min-h-screen flex items-center justify-center">
+            <div className="text-center">
+                <div className="mb-4">
+                    <ReloadIcon className="animate-spin h-12 w-12 text-[#6aebde] mx-auto" />
+                </div>
+                <p className="text-[#b7f4ee] text-lg font-semibold">Loading...</p>
+                <p className="text-[#8a9a9d] text-sm mt-2">Please wait while we fetch your content</p>
+            </div>
+        </div>
     }
 
     if (error) {
@@ -176,7 +194,7 @@ export default function DownloadPage() {
     }
 
     return (
-        <div>
+        <div className="bg-gradient-to-b from-[#090a15] via-[#0b1d23] to-[#090a15]">
             <div className="mt-20 sm:mt-44 mb-10 mx-4 sm:mx-10 flex items-center justify-center">
                 <Card className="bg-inherit p-3 sm:p-5 rounded-lg w-full max-w-5xl border-[#b7f4ee] mb-10">
                     <CardContent>
@@ -202,7 +220,7 @@ export default function DownloadPage() {
                                             : null
                                         }</span>
                                     </div>
-                                    <Button onClick={handleDownload} className="w-full bg-inherit border border-[#04c8bb] text-[#04c8bb] hover:text-[#92efe6] hover:border-[#92efe6] font-semibold hover:bg-inherit mb-4">
+                                    <Button onClick={handleDownload} disabled={isLoading || size == null} className="w-full bg-inherit border border-[#04c8bb] text-[#04c8bb] hover:text-[#92efe6] hover:border-[#92efe6] font-semibold hover:bg-inherit mb-4">
                                         Download file
                                     </Button>
                                 </div>

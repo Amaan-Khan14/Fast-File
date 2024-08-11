@@ -8,6 +8,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@radix
 import { APP_URL } from '@/config';
 import { toast } from '@/components/ui/use-toast';
 import { useAuth } from '@/useAuth';
+import TypingText from '@/components/ui/TypingText';
+import { ReloadIcon } from '@radix-ui/react-icons';
 
 
 export default function Home() {
@@ -15,7 +17,7 @@ export default function Home() {
     const [, setUploadProgress] = useState<string>('');
 
     const navigate = useNavigate();
-    const { checkLoginStatus } = useAuth()
+    const { isLoggedIn, isLoading, setIsLoading } = useAuth()
 
     const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
         if (event.target.files) {
@@ -53,9 +55,9 @@ export default function Home() {
 
         try {
             setUploadProgress('Uploading...');
-            const loggedIn = await checkLoginStatus();
+            setIsLoading(true);
             const response = await axios.post(
-                loggedIn ? `${APP_URL}/userupload` : `${APP_URL}/upload`,
+                isLoggedIn ? `${APP_URL}/userupload` : `${APP_URL}/upload`,
                 formData,
                 {
                     headers: {
@@ -67,6 +69,7 @@ export default function Home() {
 
             if (response.data.success) {
                 setUploadProgress('Upload successful!');
+                setIsLoading(false);
                 toast({
                     title: 'Upload successful',
                     description: 'Your files have been uploaded successfully'
@@ -89,11 +92,10 @@ export default function Home() {
 
 
     return (
+        <div className="bg-gradient-to-b from-[#090a15] via-[#0b1d23] to-[#090a15]">
             <div className="py-12 sm:py-24 px-4 sm:px-8">
                 <div className="max-w-screen-xl mx-auto">
-                    <h1 className="text-3xl sm:text-4xl font-bold text-center mb-4 bg-gradient-to-r from-[#d9f9f6] to-teal-900 bg-clip-text text-transparent">
-                        Share Fearlessly, Secure by Nature.
-                    </h1>
+                    <TypingText message="Share Fearlessly, Secure by Nature." className="text-3xl sm:text-4xl font-bold text-center mb-4 bg-gradient-to-r from-[#d9f9f6] to-teal-900 bg-clip-text text-transparent" />
                     <p className="text-center text-gray-300 mb-8 px-2">
                         A secure file sharing platform, enabling you to share files anywhere, anytime.
                     </p>
@@ -114,11 +116,12 @@ export default function Home() {
                                 </div>
                                 <Button
                                     onClick={encryptAndUploadFiles}
-                                    disabled={selectedFiles.length === 0}
+                                    disabled={selectedFiles.length === 0 || isLoading}
                                     className="bg-[#187367] text-white w-full sm:w-auto"
                                 >
-                                    Upload Files
+                                    {isLoading ? <ReloadIcon className="animate-spin mr-2" /> : "Upload Files"}
                                 </Button>
+
                             </CardHeader>
                         </Card>
                         <Card className="bg-inherit border-0 lg:ml-10 w-full flex items-center flex-col">
@@ -143,5 +146,6 @@ export default function Home() {
                     </Card>
                 </div>
             </div>
+        </div>
     );
 }

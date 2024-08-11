@@ -107,7 +107,7 @@ userRouter.get('/me', async (c) => {
 
     try {
         const payload = await verify(token, c.env.JWT_SECRET)
-        return c.json({ message: 'Authenticated', payload })
+        return c.json({ message: 'Authenticated', username: payload.username })
     } catch (error) {
         return c.json({ message: 'Invalid Token' }, 401)
     }

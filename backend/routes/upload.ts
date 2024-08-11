@@ -108,12 +108,7 @@ uploadRoute.get('/download/:fileId', async (c) => {
         Key: fileId
     })
     try {
-        const headCommand = new HeadObjectCommand({
-            Bucket: 'fastfile1',
-            Key: fileId
-        });
         const headResult = await S3.send(headCommand);
-
         const urlCommand = new GetObjectCommand({
             Bucket: 'fastfile1',
             Key: fileId,
@@ -123,7 +118,7 @@ uploadRoute.get('/download/:fileId', async (c) => {
         });
 
         const url = await getSignedUrl(S3, urlCommand);
-        return c.json({ success: true, url: url });
+        return c.json({ success: true, size: headResult.ContentLength, url: url });
 
     } catch (error) {
         console.error('Error downloading file:', error)

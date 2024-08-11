@@ -30,7 +30,7 @@ export default function Signin() {
             await axios.get(`${APP_URL}/userupload/files`, {
                 withCredentials: true
             });
-            navigate('/user/home');
+            navigate('/');
         } catch (error) {
             console.log('Not logged in:', error);
         } finally {
