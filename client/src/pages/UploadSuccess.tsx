@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import AppBar from '@/components/ui/AppBar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { useLocation } from 'react-router-dom';
@@ -36,8 +35,7 @@ export default function UploadSuccessPage() {
     };
 
     return (
-        <div className='bg-gradient-to-b from-[#090a15] via-[#0b1d23] to-[#090a15] min-h-screen'>
-            <AppBar />
+        <div className="bg-gradient-to-b from-[#090a15] via-[#0b1d23] to-[#090a15]">
             <div className="mt-20 sm:mt-36 px-4 sm:px-6 lg:px-8 flex items-center justify-center">
                 <Card className="bg-inherit p-4 sm:p-6 md:p-10 rounded-lg w-full max-w-4xl border-[#b7f4ee]">
                     <CardHeader>
@@ -110,21 +108,23 @@ export default function UploadSuccessPage() {
                 </Card>
             </div>
 
-            {showQRCode && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-inherit border-white border-2 p-4 sm:p-6 rounded-lg w-full max-w-xs sm:max-w-sm">
-                        <QRCode
-                            value={downloadUrl}
-                            size={256}
-                            style={{ height: "auto", maxWidth: "100%", width: "100%" }}
-                            viewBox={`0 0 256 256`}
-                        />
-                        <Button onClick={toggleQRCode} className="mt-4 w-full bg-[#04c8bb] text-white hover:bg-[#072522] text-sm sm:text-base">
-                            Close
-                        </Button>
+            {
+                showQRCode && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                        <div className="bg-inherit border-white border-2 p-4 sm:p-6 rounded-lg w-full max-w-xs sm:max-w-sm">
+                            <QRCode
+                                value={downloadUrl}
+                                size={256}
+                                style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                                viewBox={`0 0 256 256`}
+                            />
+                            <Button onClick={toggleQRCode} className="mt-4 w-full bg-[#04c8bb] text-white hover:bg-[#072522] text-sm sm:text-base">
+                                Close
+                            </Button>
+                        </div>
                     </div>
-                </div>
-            )}
+                )
+            }
         </div>
     );
 }
