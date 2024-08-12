@@ -34,7 +34,8 @@ export default function AppBar() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-16">
                     <div className="flex-shrink-0">
-                        <Link to="/">
+                        <Link to="/" className='flex justify-center items-center space-x-3'>
+                            <img src="/cloud.png" alt="logo"/>
                             <span className="text-2xl font-bold tracking-wider text-white">FastFile</span>
                         </Link>
                     </div>
