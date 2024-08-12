@@ -4,10 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Menubar, MenubarMenu, MenubarTrigger, MenubarContent, MenubarItem, MenubarSeparator } from '@/components/ui/menubar';
 import { APP_URL } from '@/config';
 import { useAuth } from '@/useAuth';
-import { Avatar } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 export default function AppBar() {
-    const { isLoggedIn, setIsLoggedIn, isLoading } = useAuth();
+    const { isLoggedIn, setIsLoggedIn, isLoading, user } = useAuth();
     const navigate = useNavigate();
 
 
@@ -50,11 +50,16 @@ export default function AppBar() {
                                     <Button onClick={handleLogout} className="py-5 px-12 text-[16px] bg-inherit border-[#04c8bb] border hover:bg-inherit hover:border-[#92efe6]">
                                         <span className="font-bold text-[#04c8bb] hover:text-[#92efe6]">Log out</span>
                                     </Button>
-                                    <Avatar className="h-10 w-10 rounded-full border-2 bg-gradient-to-br from-[#04c8bb] to-[#92efe6] border-[#04c8bb] overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300">
-                                        <Link to="/dashboard" className="flex items-center pl-3 justify-center  text-white font-semibold">
-                                            A
-                                        </Link>
-                                    </Avatar>
+                                    <Link to="/dashboard">
+                                        <Avatar className="h-10 w-10 rounded-full border-2 bg-gradient-to-br from-[#04c8bb] to-[#92efe6] border-[#04c8bb] overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300">
+                                            <AvatarFallback className='bg-inherit text-white font-semibold'>
+                                                <Link to="/dashboard">
+                                                    {user?.username[0].toUpperCase()}
+                                                </Link>
+                                            </AvatarFallback>
+
+                                        </Avatar>
+                                    </Link>
                                 </div>
                             ) : (
                                 <>
@@ -68,7 +73,7 @@ export default function AppBar() {
                             )}
                         </div>
                     </div>
-                    <Menubar className="md:hidden hover:bg-[#187367] flex bg-[#090a15]  border-white/5">
+                    <Menubar className="md:hidden bg-[#187367] flex  border-white/5">
                         <MenubarMenu>
                             <MenubarTrigger className='cursor-pointer text-white'>
                                 <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" height="30" viewBox="0 0 50 50">
