@@ -3,7 +3,7 @@ import { PrismaClient } from "@prisma/client/edge";
 import { withAccelerate } from "@prisma/extension-accelerate";
 import { Hono } from "hono";
 import { GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
-import { getSignedUrl, S3RequestPresigner } from "@aws-sdk/s3-request-presigner";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { v4 as uuid } from "uuid";
 import { getCookie } from "hono/cookie";
 import { verify } from "hono/jwt";
@@ -77,7 +77,7 @@ userUploadRouter.post('/', async (c) => {
     let params, fileName, contentType, fileSize
 
     if (files.length > 1) {
-        fileName = `fastfile.zip`
+        fileName = `${uniqueFileId}-fastfile.zip`
         const zip = new JSZip()
         for (const file of files) {
             const arrayBuffer = await file.arrayBuffer()
@@ -177,13 +177,16 @@ userUploadRouter.get('/download/:fileId', async (c) => {
     }
 })
 
+
 userUploadRouter.get('/files', async (c) => {
     const prisma = new PrismaClient({
         datasourceUrl: c.env.DATABASE_URL,
     }).$extends(withAccelerate());
 
-    const payload = c.get("payload")
-    const userId = await payload.id as number
+    const S3 = c.get('s3');
+    const payload = c.get("payload");
+    const userId = await payload.id as number;
+
     try {
         const files = await prisma.file.findMany({
             where: {
@@ -196,15 +199,29 @@ userUploadRouter.get('/files', async (c) => {
                 size: true,
                 uploadedAt: true,
             },
-        })
+        });
 
-        return c.json({ success: true, files });
+        const filesWithUrls = await Promise.all(files.map(async (file) => {
+            const command = new GetObjectCommand({
+                Bucket: "fastfileforusers",
+                Key: file.fileName,
+            });
+
+            const signedUrl = await getSignedUrl(S3, command);
+
+            return {
+                ...file,
+                url: signedUrl,
+            };
+        }));
+
+        return c.json({ success: true, files: filesWithUrls });
 
     } catch (error) {
-        console.error('Error fetching files:', error)
+        console.error('Error fetching files:', error);
         return c.json({ success: false, error: String(error) });
     }
-})
+});
 
 userUploadRouter.delete('/file/:fileId', async (c) => {
     const prisma = new PrismaClient({
