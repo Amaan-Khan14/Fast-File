@@ -35,7 +35,6 @@ export default function UploadSuccessPage() {
     };
 
     return (
-        <div className="bg-gradient-to-b from-[#090a15] via-[#0b1d23] to-[#090a15]">
             <div className="mt-20 sm:mt-36 px-4 sm:px-6 lg:px-8 flex items-center justify-center">
                 <Card className="bg-inherit p-4 sm:p-6 md:p-10 rounded-lg w-full max-w-4xl border-[#b7f4ee]">
                     <CardHeader>
@@ -106,7 +105,6 @@ export default function UploadSuccessPage() {
                         </p>
                     </CardFooter>
                 </Card>
-            </div>
 
             {
                 showQRCode && (

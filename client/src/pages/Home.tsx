@@ -92,7 +92,6 @@ export default function Home() {
 
 
     return (
-        <div className="bg-gradient-to-b from-[#090a15] via-[#0b1d23] to-[#090a15]">
             <div className="py-12 sm:py-24 px-4 sm:px-8">
                 <div className="max-w-screen-xl mx-auto">
                     <TypingText message="Share Fearlessly, Secure by Nature." className="text-3xl sm:text-4xl font-bold text-center mb-4 bg-gradient-to-r from-[#d9f9f6] to-teal-900 bg-clip-text text-transparent" />
@@ -146,6 +145,5 @@ export default function Home() {
                     </Card>
                 </div>
             </div>
-        </div>
     );
 }

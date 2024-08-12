@@ -8,10 +8,7 @@ import DownloadPage from './pages/DownloadPage';
 import { Toaster } from './components/ui/toaster';
 import AppBar from './components/ui/AppBar';
 
-
-
-
-const AppBarWrapper: React.FC = () => {
+const AppBarWrapper = () => {
   const location = useLocation();
   const hideAppBarPaths = ['/signup', '/login'];
 
@@ -25,18 +22,18 @@ const AppBarWrapper: React.FC = () => {
 export default function App() {
   return (
     <Router>
-      <div className="bg-[#090a15] min-h-screen">
+      <div className="min-h-screen bg-gradient-to-b  from-[#090a15] via-[#0b1d23] to-[#090a15]">
         <AppBarWrapper />
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path='/upload-success' element={<UploadSuccess />} />
-            <Route path='/download/:fileId' element={<DownloadPage />} />
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/login" element={<Signin />} />
-            <Route path='/user/dashboard' element={<Dashboard />} />
-          </Routes>
-          <Toaster />
-        </div>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path='/upload-success' element={<UploadSuccess />} />
+          <Route path='/download/:fileId' element={<DownloadPage />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/login" element={<Signin />} />
+          <Route path='/dashboard' element={<Dashboard />} />
+        </Routes>
+        <Toaster />
+      </div>
     </Router>
   );
 }
