@@ -5,6 +5,7 @@ import { Menubar, MenubarMenu, MenubarTrigger, MenubarContent, MenubarItem, Menu
 import { APP_URL } from '@/config';
 import { useAuth } from '@/useAuth';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { GitHubLogoIcon } from '@radix-ui/react-icons';
 
 export default function AppBar() {
     const { isLoggedIn, setIsLoggedIn, isLoading, user } = useAuth();
@@ -37,17 +38,22 @@ export default function AppBar() {
                             <span className="text-2xl font-bold tracking-wider text-white">FastFile</span>
                         </Link>
                     </div>
+
                     <div className="hidden md:block">
-                        <div className="flex items-baseline space-x-4">
+                        <div className="flex items-center space-x-4">
+                            <div className='flex items-center text-white'>
+                                <Link to="https://github.com/Amaan-Khan14/Fast-File" target='blank'>
+                                    <GitHubLogoIcon className='h-14 w-14 p-2 rounded-full' />
+                                </Link>
+                            </div>
                             {window.location.pathname === '/' ? null : (
-                                <Button className="py-5 px-8 text-[16px] bg-inherit border-[#04c8bb] border hover:bg-inherit hover:border-[#92efe6]">
+                                <Button className="h-10 px-4 text-[16px] bg-inherit border-[#04c8bb] border hover:bg-inherit hover:border-[#92efe6]">
                                     <Link to="/" className="font-bold text-[#04c8bb] hover:text-[#92efe6]">Send More Files</Link>
                                 </Button>
                             )}
-
                             {isLoggedIn ? (
                                 <div className="flex items-center gap-4">
-                                    <Button onClick={handleLogout} className="py-5 px-12 text-[16px] bg-inherit border-[#04c8bb] border hover:bg-inherit hover:border-[#92efe6]">
+                                    <Button onClick={handleLogout} className="h-10 px-6 text-[16px] bg-inherit border-[#04c8bb] border hover:bg-inherit hover:border-[#92efe6]">
                                         <span className="font-bold text-[#04c8bb] hover:text-[#92efe6]">Log out</span>
                                     </Button>
                                     <Link to="/dashboard">
@@ -57,16 +63,15 @@ export default function AppBar() {
                                                     {user?.username[0].toUpperCase()}
                                                 </Link>
                                             </AvatarFallback>
-
                                         </Avatar>
                                     </Link>
                                 </div>
                             ) : (
                                 <>
-                                    <Button className="py-5 px-12 text-[16px] w-0 bg-inherit border-[#04c8bb] border hover:bg-inherit hover:border-[#92efe6]">
+                                    <Button className="h-10 px-6 text-[16px] bg-inherit border-[#04c8bb] border hover:bg-inherit hover:border-[#92efe6]">
                                         <Link to="/login" className="font-bold text-[#04c8bb] hover:text-[#92efe6]">Log in</Link>
                                     </Button>
-                                    <Button className="py-5 px-12 text-[16px] w-36 bg-[#187367] hover:bg-[#154f47]">
+                                    <Button className="h-10 px-6 text-[16px] bg-[#187367] hover:bg-[#154f47]">
                                         <Link to="/signup" className="font-bold">Get Started</Link>
                                     </Button>
                                 </>
