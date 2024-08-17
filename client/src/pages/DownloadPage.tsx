@@ -100,48 +100,32 @@ export default function DownloadPage() {
     const handleDownload = async () => {
         if (fileInfo && encryptionKey) {
             const response = await fetch(fileInfo.url);
-
-            if (fileId?.includes('.zip')) {
+            const encryptedContent = await response.arrayBuffer();
+            const iv = new Uint8Array(encryptedContent.slice(0, 12));
+            const data = new Uint8Array(encryptedContent.slice(12));
+    
+            try {
+                const decryptedContent = await window.crypto.subtle.decrypt(
+                    { name: "AES-GCM", iv: iv },
+                    encryptionKey,
+                    data
+                );
+    
+                const blob = new Blob([decryptedContent], { type: 'application/octet-stream' });
+                const url = URL.createObjectURL(blob);
+    
+                const originalFilename = fileId?.split('.encrypted')[0];
+    
                 const a = document.createElement('a');
-                a.href = response.url;
-                a.download = fileId?.split('.encrypted')[0] as string;
+                a.href = url;
+                a.download = originalFilename as string;
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
-                URL.revokeObjectURL(response.url);
+                URL.revokeObjectURL(url);
+            } catch (error) {
+                setError('Failed to decrypt file: ' + (error instanceof Error ? error.message : String(error)));
             }
-            else {
-                try {
-                    const encryptedContent = await response.arrayBuffer();
-                    const iv = new Uint8Array(encryptedContent.slice(0, 12));
-                    const data = new Uint8Array(encryptedContent.slice(12));
-
-
-                    const decryptedContent = await window.crypto.subtle.decrypt(
-                        { name: "AES-GCM", iv: iv },
-                        encryptionKey,
-                        data
-                    );
-
-                    const blob = new Blob([decryptedContent], { type: 'application/octet-stream' });
-                    const url = URL.createObjectURL(blob);
-
-                    const originalFilename = fileId?.split('.encrypted')[0]
-
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = originalFilename as string;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                }
-
-                catch (error) {
-                    setError('Failed to decrypt file: ' + (error instanceof Error ? error.message : String(error)));
-                }
-            }
-
         } else if (!encryptionKey) {
             setError('Decryption key not found. Make sure you have the correct download link.');
         }

@@ -65,48 +65,26 @@ userUploadRouter.post('/', async (c) => {
     const userId = await payload.id as number
 
     const formData = await c.req.formData()
-    const files = formData.getAll('file') as File[]
+    const file = formData.get('file') as File
 
-    console.log('Files received:', files.map(f => f.name))
-
-    if (!files || files.length === 0) {
-        return c.json({ success: false, error: 'No valid files found' }, 400)
+    if (!file) {
+        return c.json({ success: false, error: 'No valid file found' }, 400)
     }
 
+    console.log('File received:', file.name)
+
     const uniqueFileId = uuid()
-    let params, fileName, contentType, fileSize
+    const fileName = `${uniqueFileId}-${file.name}`.slice(37,)
+    const contentType = file.type
+    const fileSize = file.size
 
-    if (files.length > 1) {
-        fileName = `${uniqueFileId}-fastfile.zip`
-        const zip = new JSZip()
-        for (const file of files) {
-            const arrayBuffer = await file.arrayBuffer()
-            zip.file(file.name, arrayBuffer)
+    const arrayBuffer = await file.arrayBuffer()
 
-        }
-        const zipContent = await zip.generateAsync({ type: 'uint8array' })
-
-        fileSize = zipContent.byteLength
-        contentType = 'application/zip'
-
-        params = {
-            Bucket: 'fastfileforusers',
-            Key: fileName,
-            Body: zipContent,
-            ContentType: contentType,
-        }
-    } else {
-        const file = files[0]
-        const arrayBuffer = await file.arrayBuffer()
-        fileName = `${uniqueFileId}-${file.name}`
-        contentType = file.type
-        fileSize = arrayBuffer.byteLength
-        params = {
-            Bucket: 'fastfileforusers',
-            Key: fileName,
-            Body: new Uint8Array(arrayBuffer),
-            ContentType: contentType,
-        }
+    const params = {
+        Bucket: 'fastfileforusers',
+        Key: fileName,
+        Body: new Uint8Array(arrayBuffer),
+        ContentType: contentType,
     }
 
     try {

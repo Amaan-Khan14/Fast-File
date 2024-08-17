@@ -13,6 +13,7 @@ interface Env {
     AWS_SECRET_ACCESS_KEY: string;
 }
 
+
 export const uploadRoute = new Hono<{ Bindings: Env, Variables: CustomContext }>();
 
 
@@ -31,56 +32,30 @@ uploadRoute.use(async (c, next) => {
 
 uploadRoute.post('/upload', async (c) => {
     const S3 = c.get('s3')
-
     const formData = await c.req.formData()
-    const files = await formData.getAll('file') as File[]
-    console.log('Files received:', files.map(f => f.name))
+    const file = await formData.get('file') as File
 
-    if (!files || files.length === 0) {
-        return c.json({ success: false, error: 'No valid files found' }, 400)
+    if (!file) {
+        return c.json({ success: false, error: 'No valid file found' }, 400)
     }
 
     const uniqueFileId = uuid();
-    let params, fileName, contentType, fileSize
+    const fileName = `${uniqueFileId}-${file.name}`.slice(37,)
+    const contentType = file.type
+    const fileSize = file.size
 
-    if (files.length > 1) {
-        fileName = "fastfile.zip"
-        const zip: { [key: string]: Uint8Array } = {}
-        for (const file of files) {
-            const arrayBuffer = await file.arrayBuffer()
-            zip[file.name] = new Uint8Array(arrayBuffer)
+    const arrayBuffer = await file.arrayBuffer()
 
-        }
-        const zipContent = zipSync(zip)
-
-        fileSize = zipContent.byteLength
-        contentType = 'application/zip'
-
-        params = {
-            Bucket: 'fastfile1',
-            Key: fileName,
-            Body: zipContent,
-            ContentType: contentType,
-            ServerSideEncryption: ServerSideEncryption.AES256,
-        }
-    } else {
-        const file = files[0]
-        const arrayBuffer = await file.arrayBuffer()
-        fileName = `${uniqueFileId}-${file.name}`.slice(37,)
-        contentType = file.type
-        fileSize = arrayBuffer.byteLength
-        params = {
-            Bucket: 'fastfile1',
-            Key: fileName,
-            Body: new Uint8Array(arrayBuffer),
-            ContentType: contentType,
-            ServerSideEncryption: ServerSideEncryption.AES256,
-        }
+    const params = {
+        Bucket: 'fastfile1',
+        Key: fileName,
+        Body: new Uint8Array(arrayBuffer),
+        ContentType: contentType,
     }
+
     try {
         const command = new PutObjectCommand(params)
-        const data = await S3.send(command)
-
+        await S3.send(command)
 
         const urlCommand = new GetObjectCommand({
             Bucket: 'fastfile1',
@@ -92,7 +67,6 @@ uploadRoute.post('/upload', async (c) => {
         const url = await getSignedUrl(S3, urlCommand);
 
         return c.json({ success: true, fileSize, url: url });
-
     } catch (error) {
         console.error('Error uploading file:', error)
         return c.json({ success: false, error: String(error) });

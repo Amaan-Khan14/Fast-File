@@ -10,6 +10,8 @@ import { toast } from '@/components/ui/use-toast';
 import { useAuth } from '@/useAuth';
 import TypingText from '@/components/ui/TypingText';
 import { ReloadIcon } from '@radix-ui/react-icons';
+import JSZip from 'jszip';
+
 
 
 export default function Home() {
@@ -25,34 +27,46 @@ export default function Home() {
         }
     };
 
-
     const encryptAndUploadFiles = async () => {
         const encryptionKey = await window.crypto.subtle.generateKey(
             { name: "AES-GCM", length: 256 },
             true,
             ["encrypt", "decrypt"]
         );
-
-        const encryptedFiles: File[] = [];
-
-        for (const file of selectedFiles) {
-            const fileBuffer = await file.arrayBuffer();
-            const iv = window.crypto.getRandomValues(new Uint8Array(12));
-            const encryptedContent = await window.crypto.subtle.encrypt(
-                { name: "AES-GCM", iv: iv },
-                encryptionKey,
-                fileBuffer
-            );
-
-            const encryptedBlob = new Blob([iv, encryptedContent], { type: 'application/octet-stream' });
-            encryptedFiles.push(new File([encryptedBlob], file.name + '.encrypted'));
+    
+        let fileToUpload: Blob;
+        let fileName: string;
+    
+        if (selectedFiles.length > 1) {
+            // Create a zip file
+            const zip = new JSZip();
+            for (const file of selectedFiles) {
+                const arrayBuffer = await file.arrayBuffer();
+                zip.file(file.name, arrayBuffer);
+            }
+            const zipBlob = await zip.generateAsync({type: "blob"});
+            fileName = "fastfile.zip";
+            fileToUpload = zipBlob;
+        } else {
+            fileName = selectedFiles[0].name;
+            fileToUpload = selectedFiles[0];
         }
-
+    
+        // Encrypt the file or zip
+        const fileBuffer = await fileToUpload.arrayBuffer();
+        const iv = window.crypto.getRandomValues(new Uint8Array(12));
+        const encryptedContent = await window.crypto.subtle.encrypt(
+            { name: "AES-GCM", iv: iv },
+            encryptionKey,
+            fileBuffer
+        );
+    
+        const encryptedBlob = new Blob([iv, encryptedContent], { type: 'application/octet-stream' });
+        const encryptedFile = new File([encryptedBlob], fileName + '.encrypted');
+    
         const formData = new FormData();
-        encryptedFiles.forEach((file) => {
-            formData.append('file', file);
-        });
-
+        formData.append('file', encryptedFile);
+    
         try {
             setUploadProgress('Uploading...');
             setIsLoading(true);
@@ -66,7 +80,7 @@ export default function Home() {
                     withCredentials: true
                 }
             )
-
+    
             if (response.data.success) {
                 setUploadProgress('Upload successful!');
                 setIsLoading(false);
@@ -76,12 +90,11 @@ export default function Home() {
                 })
                 let fileId = response.data.url.split('/')[3];
                 fileId = fileId.split('?')[0];
-
+    
                 const exportedKey = await window.crypto.subtle.exportKey("jwk", encryptionKey);
                 const keyString = JSON.stringify(exportedKey);
-
+    
                 navigate('/upload-success', { state: { fileId: fileId, encryptionKey: keyString } });
-
             } else {
                 setUploadProgress(`Upload failed: ${response.data.error}`);
             }
@@ -92,58 +105,58 @@ export default function Home() {
 
 
     return (
-            <div className="py-12 sm:py-24 px-4 sm:px-8">
-                <div className="max-w-screen-xl mx-auto">
-                    <TypingText message="Share Fearlessly, Secure by Nature." className="text-3xl sm:text-4xl font-bold text-center mb-4 bg-gradient-to-r from-[#d9f9f6] to-teal-900 bg-clip-text text-transparent" />
-                    <p className="text-center text-gray-300 mb-8 px-2">
-                        A secure file sharing platform, enabling you to share files anywhere, anytime.
-                    </p>
-                    <Card className="bg-inherit p-4 sm:p-10 rounded-lg flex flex-col lg:flex-row justify-between h-full w-full border-[#b7f4ee]">
-                        <Card className="bg-inherit flex flex-col justify-center items-center border-dashed p-3 sm:p-5 border-[#187367] border-2 w-full h-auto sm:h-96 mb-6 lg:mb-0">
-                            <CardHeader className='h-full mt-4 sm:mt-10'>
-                                <div className="max-w-sm w-full">
-                                    <Input
-                                        id="file"
-                                        type="file"
-                                        multiple
-                                        className="bg-[#187367] border-0 p-3 sm:p-5 h-auto text-white hover:bg-[#154f47] w-full"
-                                        onChange={handleFileChange}
-                                    />
-                                </div>
-                                <div className="mt-4 text-white text-center">
-                                    <p className='mt-2 mb-5'>{selectedFiles.length} file(s) selected</p>
-                                </div>
-                                <Button
-                                    onClick={encryptAndUploadFiles}
-                                    disabled={selectedFiles.length === 0 || isLoading}
-                                    className="bg-[#187367] text-white w-full sm:w-auto"
-                                >
-                                    {isLoading ? <ReloadIcon className="animate-spin mr-2" /> : "Upload Files"}
-                                </Button>
+        <div className="py-12 sm:py-24 px-4 sm:px-8">
+            <div className="max-w-screen-xl mx-auto">
+                <TypingText message="Share Fearlessly, Secure by Nature." className="text-3xl sm:text-4xl font-bold text-center mb-4 bg-gradient-to-r from-[#d9f9f6] to-teal-900 bg-clip-text text-transparent" />
+                <p className="text-center text-gray-300 mb-8 px-2">
+                    A secure file sharing platform, enabling you to share files anywhere, anytime.
+                </p>
+                <Card className="bg-inherit p-4 sm:p-10 rounded-lg flex flex-col lg:flex-row justify-between h-full w-full border-[#b7f4ee]">
+                    <Card className="bg-inherit flex flex-col justify-center items-center border-dashed p-3 sm:p-5 border-[#187367] border-2 w-full h-auto sm:h-96 mb-6 lg:mb-0">
+                        <CardHeader className='h-full mt-4 sm:mt-10'>
+                            <div className="max-w-sm w-full">
+                                <Input
+                                    id="file"
+                                    type="file"
+                                    multiple
+                                    className="bg-[#187367] border-0 p-3 sm:p-5 h-auto text-white hover:bg-[#154f47] w-full"
+                                    onChange={handleFileChange}
+                                />
+                            </div>
+                            <div className="mt-4 text-white text-center">
+                                <p className='mt-2 mb-5'>{selectedFiles.length} file(s) selected</p>
+                            </div>
+                            <Button
+                                onClick={encryptAndUploadFiles}
+                                disabled={selectedFiles.length === 0 || isLoading}
+                                className="bg-[#187367] text-white w-full sm:w-auto"
+                            >
+                                {isLoading ? <ReloadIcon className="animate-spin mr-2" /> : "Upload Files"}
+                            </Button>
 
-                            </CardHeader>
-                        </Card>
-                        <Card className="bg-inherit border-0 lg:ml-10 w-full flex items-center flex-col">
-                            <h2 className="text-2xl sm:text-4xl font-bold bg-gradient-to-r from-teal-100 to-teal-400 bg-clip-text text-transparent my-5 ">
-                                Seamless, secure file sharing with peace of mind and privacy.
-                            </h2>
-                            <p className="text-gray-300 text-base sm:text-xl tracking-normal">
-                                FastFile leverages advanced <span className='font-bold text-teal-400 tracking-wider'>
-                                    <TooltipProvider>
-                                        <Tooltip>
-                                            <TooltipTrigger>end-to-end encryption</TooltipTrigger>
-                                            <TooltipContent>
-                                                <Card className='bg-[#187367] border-0 p-2 text-white text-sm sm:text-base w-60 sm:w-72 tracking-normal'>
-                                                    End-to-end encryption ensures that your files are encrypted on your device before uploading. Only you and those you share the decryption key with can access the original files. The server never sees the unencrypted data.
-                                                </Card>
-                                            </TooltipContent>
-                                        </Tooltip>
-                                    </TooltipProvider>
-                                </span> to rigorously protect your files during transfer and storage. Secure sharing links include the necessary decryption information, ensuring that only intended recipients can access your files.
-                            </p>
-                        </Card>
+                        </CardHeader>
                     </Card>
-                </div>
+                    <Card className="bg-inherit border-0 lg:ml-10 w-full flex items-center flex-col">
+                        <h2 className="text-2xl sm:text-4xl font-bold bg-gradient-to-r from-teal-100 to-teal-400 bg-clip-text text-transparent my-5 ">
+                            Seamless, secure file sharing with peace of mind and privacy.
+                        </h2>
+                        <p className="text-gray-300 text-base sm:text-xl tracking-normal">
+                            FastFile leverages advanced <span className='font-bold text-teal-400 tracking-wider'>
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger>end-to-end encryption</TooltipTrigger>
+                                        <TooltipContent>
+                                            <Card className='bg-[#187367] border-0 p-2 text-white text-sm sm:text-base w-60 sm:w-72 tracking-normal'>
+                                                End-to-end encryption ensures that your files are encrypted on your device before uploading. Only you and those you share the decryption key with can access the original files. The server never sees the unencrypted data.
+                                            </Card>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                            </span> to rigorously protect your files during transfer and storage. Secure sharing links include the necessary decryption information, ensuring that only intended recipients can access your files.
+                        </p>
+                    </Card>
+                </Card>
             </div>
+        </div>
     );
 }
