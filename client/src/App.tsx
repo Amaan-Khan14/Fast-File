@@ -1,24 +1,11 @@
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
-import Signup from './pages/Regitser';
-import Signin from './pages/Login';
-import Dashboard from './pages/Dashboard';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+
 import Home from './pages/Home';
 import UploadSuccess from './pages/UploadSuccess';
 import DownloadPage from './pages/DownloadPage';
 import { Toaster } from './components/ui/toaster';
 import AppBar from './components/ui/AppBar';
 import WaveLines from './components/ui/Threas';
-
-const AppBarWrapper = () => {
-  const location = useLocation();
-  const hideAppBarPaths = ['/signup', '/login'];
-
-  return (
-    <>
-      {!hideAppBarPaths.includes(location.pathname) && <AppBar />}
-    </>
-  );
-};
 
 export default function App() {
   return (
@@ -28,14 +15,11 @@ export default function App() {
           <WaveLines />
         </div>
         <div className="relative z-10">
-          <AppBarWrapper />
+          <AppBar />
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path='/upload-success' element={<UploadSuccess />} />
             <Route path='/download/:fileId' element={<DownloadPage />} />
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/login" element={<Signin />} />
-            <Route path='/dashboard' element={<Dashboard />} />
           </Routes>
           <Toaster />
         </div>

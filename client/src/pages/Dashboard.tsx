@@ -34,7 +34,7 @@ interface FileResponse {
 }
 
 export default function Dashboard() {
-    const { user, setIsLoading } = useAuth();
+    const { user } = useAuth();
     const [files, setFiles] = useState<FileItem[]>([]);
     const [totalFiles, setTotalFiles] = useState(0);
     const [Loading, setLoading] = useState(true);
